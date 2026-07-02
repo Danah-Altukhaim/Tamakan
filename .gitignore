@@ -7,3 +7,6 @@ dist/
 !.env.example
 npm-debug.log*
 .vercel
+
+# Downloaded design kit archives
+*apple-hig-web-kit*.zip

@@ -149,16 +149,13 @@ export function Assistant() {
                             </div>
                           </div>
                         )}
-                        <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                          <span>
-                            {t("assistant.confidence")}: {Math.round(turn.answer.confidence * 100)}%
-                          </span>
-                          {turn.answer.escalate && (
+                        {turn.answer.escalate && (
+                          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
                             <Badge tone="amber">
                               <Icon name="alert" size={12} /> {t("assistant.escalate")}
                             </Badge>
-                          )}
-                        </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

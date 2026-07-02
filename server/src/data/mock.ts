@@ -282,7 +282,7 @@ export const users: User[] = [
     nameAr: "محمد البحّار",
     initials: "MA",
     role: "manager",
-    jobTitle: "Team Lead — Reservoir",
+    jobTitle: "Manager — Reservoir",
     department: "Engineering & Reservoir",
     joined: "2015-04-01",
     streak: 0,
