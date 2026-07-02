@@ -1,3 +1,4 @@
+import "./env.js";
 import app from "./app.js";
 
 // Local development entry point. On Vercel the app is served by the

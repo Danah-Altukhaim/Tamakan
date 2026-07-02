@@ -1,15 +1,6 @@
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from "recharts";
 import { useSession } from "../../app/session";
 import { Card, Badge, StatTile, PageHeader, ProgressBar } from "../../components/ui";
 import { Icon } from "../../components/Icon";
@@ -60,78 +51,70 @@ export function Analytics() {
       {/* KPI tiles */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatTile
+          tone="blue"
           icon={<Icon name="trend-up" size={22} />}
           value={`${avgCompletion}%`}
           label={t("manager.avgCompletion")}
         />
         <StatTile
+          tone="green"
           icon={<Icon name="check-circle" size={22} />}
           value={active}
           label={t("manager.activeLearners")}
-          accent="var(--success)"
         />
         <StatTile
+          tone="rose"
           icon={<Icon name="alert" size={22} />}
           value={atRisk.length}
           label={t("manager.atRiskLearners")}
-          accent="var(--danger)"
         />
         <StatTile
+          tone="violet"
           icon={<Icon name="layers" size={22} />}
           value={staleTracks.length}
           label={t("manager.staleTracks")}
-          accent="var(--koc-sand)"
         />
       </div>
 
       <div className="grid gap-5 lg:grid-cols-[1.5fr_1fr]">
         {/* Completion by track */}
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-bold">{t("manager.completionByTrack")}</h2>
-          <ResponsiveContainer width="100%" height={Math.max(240, byTrack.length * 30)}>
-            <BarChart
-              layout="vertical"
-              data={byTrack}
-              margin={{ left: 8, right: 24 }}
-              barSize={14}
-            >
-              <XAxis type="number" domain={[0, 100]} hide />
-              <YAxis
-                type="category"
-                dataKey="name"
-                width={150}
-                tick={{ fontSize: 11, fill: "var(--text-muted)" }}
-                axisLine={false}
-                tickLine={false}
-                orientation={lang === "ar" ? "right" : "left"}
-              />
-              <Tooltip
-                formatter={(v: number) => [`${v}%`, t("manager.avgCompletion")]}
-                contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--separator)" }}
-                cursor={{ fill: "var(--fill-subtle)" }}
-              />
-              <Bar dataKey="percent" radius={[0, 6, 6, 0]}>
-                {byTrack.map((d) => (
-                  <Cell
-                    key={d.id}
-                    fill={
-                      d.percent < 35
-                        ? "var(--danger)"
-                        : d.percent < 70
-                          ? "var(--koc-sand)"
-                          : "var(--success)"
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+          <h2 className="mb-5 text-[15px] font-semibold text-[var(--text)]">
+            {t("manager.completionByTrack")}
+          </h2>
+          <ul className="space-y-3">
+            {byTrack.map((d) => {
+              const fill =
+                d.percent < 35
+                  ? "var(--danger)"
+                  : d.percent < 70
+                    ? "var(--warning)"
+                    : "var(--success)";
+              return (
+                <li key={d.id} className="flex items-center gap-3">
+                  <span className="w-[150px] shrink-0 truncate text-end text-[13px] text-[var(--text-secondary)]">
+                    {d.name}
+                  </span>
+                  <div className="h-3 flex-1 overflow-hidden rounded-full bg-[var(--fill-strong)]">
+                    <div
+                      className="h-full rounded-full transition-[width] duration-500 ease-[var(--ease-out)]"
+                      style={{ inlineSize: `${Math.max(2, d.percent)}%`, background: fill }}
+                      title={`${d.percent}%`}
+                    />
+                  </div>
+                  <span className="w-9 shrink-0 text-end text-xs font-semibold tabular-nums text-[var(--text-secondary)]">
+                    {d.percent}%
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
         </Card>
 
         {/* At-risk learners + stale tracks */}
         <div className="space-y-5">
           <Card className="p-6">
-            <h2 className="mb-4 text-sm font-bold">{t("manager.atRiskList")}</h2>
+            <h2 className="mb-4 text-[15px] font-semibold text-[var(--text)]">{t("manager.atRiskList")}</h2>
             {atRisk.length === 0 ? (
               <p className="text-sm text-[var(--text-muted)]">{t("manager.noRisk")}</p>
             ) : (
@@ -162,7 +145,7 @@ export function Analytics() {
           </Card>
 
           <Card className="p-6">
-            <h2 className="mb-4 text-sm font-bold">{t("manager.staleTracks")}</h2>
+            <h2 className="mb-4 text-[15px] font-semibold text-[var(--text)]">{t("manager.staleTracks")}</h2>
             <ul className="space-y-2.5">
               {staleTracks.map((tk) => (
                 <li key={tk.id} className="flex items-center justify-between gap-2">

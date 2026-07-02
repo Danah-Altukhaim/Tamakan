@@ -35,8 +35,7 @@ function DemoCard({
       className="group flex w-full items-center gap-3 rounded-2xl border border-[var(--separator)] bg-[var(--card)] p-3 text-start transition-[transform,box-shadow] duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-raised)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--koc-blue)]"
     >
       <div
-        className="grid h-11 w-11 shrink-0 place-items-center rounded-full text-lg"
-        style={{ background: "var(--koc-sand)", color: "var(--koc-navy)" }}
+        className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[var(--fill-subtle)] text-[var(--tint)]"
         aria-hidden
       >
         <Icon name={role === "learner" ? "graduation" : "dashboard"} size={22} />
@@ -85,7 +84,7 @@ export function Login() {
         </div>
 
         {/* Auth card */}
-        <div className="rounded-3xl border border-[var(--separator)] bg-[var(--card)] p-6 shadow-[var(--shadow-sheet)]">
+        <div className="rounded-[var(--radius-2xl)] border border-[var(--separator)] bg-[var(--card)] p-6 shadow-[var(--shadow-raised)]">
           <form onSubmit={onSubmit} className="space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold text-[var(--text-muted)]">
@@ -113,7 +112,7 @@ export function Login() {
             </label>
             <button
               type="submit"
-              className="w-full rounded-xl bg-[var(--koc-blue)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--koc-navy)]"
+              className="w-full rounded-full bg-[var(--tint)] px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-[var(--koc-blue-strong)]"
             >
               {t("login.signIn")}
             </button>

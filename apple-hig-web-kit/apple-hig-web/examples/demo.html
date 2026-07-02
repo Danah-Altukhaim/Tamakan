@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Apple HIG for the Web — demo</title>
+<!-- Link tokens FIRST, then the component styles. -->
+<link rel="stylesheet" href="../assets/tokens.css" />
+<link rel="stylesheet" href="../assets/apple-hig.css" />
+<style>
+  /* page scaffolding only — not part of the kit */
+  body { margin: 0; background: var(--hig-bg-secondary); font-family: var(--hig-font); color: var(--hig-label); }
+  .stage { display: flex; flex-wrap: wrap; gap: 32px; padding: 32px; align-items: flex-start; justify-content: center; }
+  .phone { width: 390px; height: 760px; background: var(--hig-bg-grouped); border-radius: 44px; box-shadow: var(--hig-shadow-window); overflow: hidden; position: relative; display: flex; flex-direction: column;
+    background-image: radial-gradient(120% 60% at 80% 0%, color-mix(in srgb, var(--sys-blue) 22%, transparent), transparent 60%),
+                      radial-gradient(120% 60% at 0% 100%, color-mix(in srgb, var(--sys-pink) 18%, transparent), transparent 55%); }
+  .phone-scroll { flex: 1; overflow: auto; padding-bottom: 8px; }
+  .mac { width: 560px; border-radius: 12px; overflow: hidden; box-shadow: var(--hig-shadow-window); border: 0.5px solid var(--hig-separator); background: var(--hig-bg); }
+  .mac-titlebar { display: flex; align-items: center; gap: 8px; padding: 10px 14px; border-bottom: 0.5px solid var(--hig-separator);
+    background-image: radial-gradient(140% 120% at 100% 0%, color-mix(in srgb, var(--sys-purple) 16%, transparent), transparent 60%); }
+  .tl { width: 12px; height: 12px; border-radius: 50%; }
+  .mac-body { display: flex; min-height: 420px; }
+  .mac-content { flex: 1; padding: 16px; background: var(--hig-bg); }
+  .toolbar-pad { padding: 10px 16px; }
+  .toggle-btn { position: fixed; top: 16px; right: 16px; z-index: 200; }
+  h2.section { font-size: var(--hig-footnote); color: var(--hig-label-2); text-transform: uppercase; letter-spacing: .06em; margin: 18px 16px 6px; }
+</style>
+</head>
+<body class="hig">
+
+<!-- SVG displacement filter for true glass refraction (Chromium). Harmless elsewhere. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <filter id="glass-refract" x="-20%" y="-20%" width="140%" height="140%">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="0.6" result="b"/>
+    <feDisplacementMap in="b" in2="b" scale="14" xChannelSelector="R" yChannelSelector="G"/>
+  </filter>
+</svg>
+
+<button class="hig-btn hig-btn--tinted toggle-btn" onclick="document.documentElement.dataset.higTheme = (document.documentElement.dataset.higTheme==='dark'?'light':'dark')">Toggle appearance</button>
+
+<div class="stage">
+
+  <!-- ================= iOS ================= -->
+  <div class="phone">
+    <header class="hig-navbar glass">
+      <div class="hig-navbar-leading"></div>
+      <div class="hig-navbar-trailing"><button class="hig-btn hig-btn--plain">Edit</button></div>
+    </header>
+    <div class="hig-large-title-block"><h1>Settings</h1></div>
+
+    <div class="phone-scroll">
+      <div style="padding: 0 16px 8px;">
+        <label class="hig-search"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2"/><path d="M21 21l-4.3-4.3" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><input type="search" placeholder="Search" aria-label="Search" /></label>
+      </div>
+
+      <div style="padding: 8px 16px;">
+        <div class="hig-segmented" role="tablist">
+          <button role="tab" aria-selected="true">All</button>
+          <button role="tab" aria-selected="false">Unread</button>
+          <button role="tab" aria-selected="false">Flagged</button>
+        </div>
+      </div>
+
+      <ul class="hig-list hig-list--inset">
+        <li class="hig-row"><span class="hig-row-icon" style="background:var(--sys-blue)" aria-hidden="true">✈︎</span><span class="hig-row-text"><span class="hig-row-title">Airplane Mode</span></span><input type="checkbox" class="hig-toggle" /></li>
+        <li class="hig-row"><span class="hig-row-icon" style="background:var(--sys-green)" aria-hidden="true">📶</span><span class="hig-row-text"><span class="hig-row-title">Wi‑Fi</span></span><span class="hig-row-value">Home</span><span class="hig-row-chevron" aria-hidden="true"></span></li>
+        <li class="hig-row"><span class="hig-row-icon" style="background:var(--sys-blue)" aria-hidden="true">ⓑ</span><span class="hig-row-text"><span class="hig-row-title">Bluetooth</span></span><span class="hig-row-value">On</span><span class="hig-row-chevron" aria-hidden="true"></span></li>
+      </ul>
+
+      <h2 class="section">Display</h2>
+      <ul class="hig-list hig-list--inset">
+        <li class="hig-row"><span class="hig-row-icon" style="background:var(--sys-indigo)" aria-hidden="true">☀︎</span><span class="hig-row-text"><span class="hig-row-title">Brightness</span></span></li>
+        <li class="hig-row"><span class="hig-row-text"><span class="hig-row-title">Dark Appearance</span><span class="hig-row-subtitle">Automatic at sunset</span></span><input type="checkbox" class="hig-toggle" checked /></li>
+        <li class="hig-row"><span class="hig-row-text"><span class="hig-row-title">Text Size</span></span><span class="hig-row-value">Default</span><span class="hig-row-chevron" aria-hidden="true"></span></li>
+      </ul>
+
+      <div style="padding: 20px 16px;">
+        <button class="hig-btn hig-btn--filled hig-btn--lg">Continue</button>
+      </div>
+    </div>
+
+    <nav class="hig-tabbar glass" role="tablist">
+      <button class="hig-tab is-selected" role="tab" aria-selected="true" aria-label="Today"><span class="hig-tab-icon" aria-hidden="true">◷</span><span>Today</span></button>
+      <button class="hig-tab" role="tab" aria-selected="false" aria-label="Games"><span class="hig-tab-icon" aria-hidden="true">◆</span><span>Games</span></button>
+      <button class="hig-tab" role="tab" aria-selected="false" aria-label="Search"><span class="hig-tab-icon" aria-hidden="true">⌕</span><span>Search</span></button>
+    </nav>
+  </div>
+
+  <!-- ================= macOS ================= -->
+  <div class="mac" data-hig-platform="macos">
+    <div class="mac-titlebar glass">
+      <span class="tl" style="background:#FF5F57"></span>
+      <span class="tl" style="background:#FEBC2E"></span>
+      <span class="tl" style="background:#28C840"></span>
+      <span style="margin-inline-start:8px; font-size:var(--hig-headline); font-weight:var(--hig-w-semibold)">Mail</span>
+      <span style="flex:1"></span>
+      <button class="hig-btn hig-btn--bordered hig-btn--sm">Compose</button>
+    </div>
+    <div class="mac-body">
+      <aside class="hig-sidebar glass" style="width:200px">
+        <h3>Favorites</h3>
+        <a class="hig-sidebar-item is-selected" href="#"><span aria-hidden="true">📥</span><span>Inbox</span></a>
+        <a class="hig-sidebar-item" href="#"><span aria-hidden="true">★</span><span>Flagged</span></a>
+        <a class="hig-sidebar-item" href="#"><span aria-hidden="true">✉︎</span><span>Sent</span></a>
+        <h3>Smart Mailboxes</h3>
+        <a class="hig-sidebar-item" href="#"><span aria-hidden="true">📎</span><span>Attachments</span></a>
+      </aside>
+      <div class="mac-content">
+        <div class="hig-toolbar" style="margin-bottom:12px; background:var(--fill-3)">
+          <button>Reply</button><button>Forward</button><span class="hig-spacer"></span>
+          <label class="hig-search" style="max-width:180px"><input type="search" placeholder="Search" aria-label="Search"/></label>
+        </div>
+        <ul class="hig-list">
+          <li class="hig-row"><span class="hig-row-text"><span class="hig-row-title">Design review notes</span><span class="hig-row-subtitle">Looks great — a couple of tweaks on spacing…</span></span><span class="hig-row-value">9:41 AM</span></li>
+          <li class="hig-row"><span class="hig-row-text"><span class="hig-row-title">Q3 roadmap</span><span class="hig-row-subtitle">Attaching the latest deck for Friday.</span></span><span class="hig-row-value">Yesterday</span></li>
+          <li class="hig-row"><span class="hig-row-text"><span class="hig-row-title">Lunch?</span><span class="hig-row-subtitle">That new place by the park.</span></span><span class="hig-row-value">Mon</span></li>
+        </ul>
+        <div style="margin-top:14px; display:flex; gap:8px;">
+          <button class="hig-btn hig-btn--filled hig-btn--sm">Send</button>
+          <button class="hig-btn hig-btn--sm">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

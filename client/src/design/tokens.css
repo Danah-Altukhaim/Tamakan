@@ -1,47 +1,91 @@
 /*
- * Tamakan design tokens — KOC theme on an Apple-HIG foundation.
+ * Tamakan design tokens — KOC identity on a mature Apple-HIG foundation.
+ *
+ * Principles (see apple-hig-web skill):
+ *  · One tint. KOC blue is the single accent; gold (sand) is a rare highlight,
+ *    never a UI color. Everything else is a semantic neutral.
+ *  · Semantic, layered surfaces — not literal colors.
+ *  · Hairline separators, soft ambient shadows, generous whitespace.
+ *
  * ⚠️ KOC brand hex values are a starting system per CLAUDE.md / PRD §9.2 —
  * confirm against official KOC brand guidelines before final release.
  */
 :root {
   /* KOC brand */
   --koc-blue: #0a4a9f;
+  --koc-blue-strong: #083b80; /* pressed / hover-deepen */
   --koc-navy: #0d1b4b;
   --koc-sky: #2b6cb0;
-  --koc-sand: #c9a84c;
+  --koc-sand: #c9a84c; /* reserved: rare highlight only */
 
-  /* Surfaces */
-  --surface: #f5f7fa;
-  --card: #ffffff;
+  /* The single interactive tint */
+  --tint: var(--koc-blue);
+
+  /*
+   * Accent palette — a curated, harmonized set that sits *with* KOC blue.
+   * KOC blue stays the lead; these bring the dashboard to life on stat tiles,
+   * icon chips and charts. Each has a soft (wash) companion for tinted fills.
+   * Not a free-for-all: use the named tones, don't invent per-element colors.
+   */
+  --accent-blue: #0a4a9f; /* KOC — primary */
+  --accent-sky: #2b8bd8; /* brighter, friendlier blue */
+  --accent-teal: #0ea5a5;
+  --accent-violet: #6d5bd0;
+  --accent-amber: #e0930b;
+  --accent-orange: #ef6c2e; /* streak / energy */
+  --accent-rose: #e0568b; /* rare pop */
+  --accent-green: #1f9d54;
+
+  /* Gradients — soft, airy, pastel. Bright end, never sinks to navy. */
+  --grad-brand: linear-gradient(135deg, #2b7fd4 0%, #1568c9 58%, #0a4a9f 100%);
+  --grad-brand-vivid: linear-gradient(135deg, #6bb5ee 0%, #2b8bd8 55%, #0a4a9f 100%);
+  --grad-sky: linear-gradient(135deg, #8fc7f2 0%, #4aa0e6 100%);
+  --grad-bar: linear-gradient(180deg, #9ecdf5 0%, #4f9ce2 100%);
+  /* Pastel hero wash — light blue, holds dark ink text comfortably */
+  --grad-hero: linear-gradient(135deg, #eef5fd 0%, #dcecfb 46%, #cfe4f8 100%);
+
+  /* Surfaces — grouped-background model (page darker, cards lighter) */
+  --surface: #f2f3f7; /* page */
+  --card: #ffffff; /* resting card */
+  --card-elevated: #ffffff;
   --card-translucent: rgba(255, 255, 255, 0.72);
-  --separator: rgba(13, 27, 75, 0.08);
-  --fill-subtle: rgba(10, 74, 159, 0.07);
 
-  /* Text */
-  --text: #0d1b4b;
-  --text-muted: #64748b;
+  /* Neutral fills — translucent grays layered over content (Apple systemFill) */
+  --fill: rgba(60, 66, 87, 0.06); /* icon chips, quiet buttons */
+  --fill-strong: rgba(60, 66, 87, 0.1);
+  --fill-subtle: rgba(10, 74, 159, 0.06); /* faint tint wash for selected/nav */
+
+  /* Hairlines */
+  --separator: rgba(60, 66, 87, 0.1);
+  --separator-strong: rgba(60, 66, 87, 0.16);
+
+  /* Text — semantic labels */
+  --text: #10193f; /* primary (KOC ink) */
+  --text-secondary: #4a5578; /* subtitles, secondary rows */
+  --text-muted: #77809b; /* captions, hints, glyphs */
   --text-on-brand: #ffffff;
-  --text-on-brand-muted: #a8bfdf;
+  --text-on-brand-muted: rgba(255, 255, 255, 0.72);
 
-  /* States */
-  --success: #16a34a;
-  --success-soft: #dcfce7;
-  --warning: #b07f18;
-  --warning-soft: #fdf3d7;
-  --locked: #cbd5e1;
-  --danger: #dc2626;
-  --danger-soft: #fee2e2;
+  /* States — desaturated, Apple-adjacent */
+  --success: #1f9d54;
+  --success-soft: #e6f4ec;
+  --warning: #b5820f;
+  --warning-soft: #fbf1d9;
+  --locked: #c2c8d6;
+  --danger: #d64545;
+  --danger-soft: #fbe9e9;
 
-  /* Elevation (restrained, HIG-style) */
-  --shadow-card: 0 1px 2px rgba(13, 27, 75, 0.05), 0 4px 16px rgba(13, 27, 75, 0.06);
-  --shadow-raised: 0 4px 12px rgba(13, 27, 75, 0.1), 0 12px 32px rgba(13, 27, 75, 0.12);
-  --shadow-sheet: 0 24px 64px rgba(13, 27, 75, 0.28);
+  /* Elevation — soft, ambient, restrained (depth from layering, not weight) */
+  --shadow-card: 0 1px 2px rgba(16, 25, 63, 0.04), 0 4px 14px rgba(16, 25, 63, 0.05);
+  --shadow-raised: 0 2px 6px rgba(16, 25, 63, 0.06), 0 12px 30px rgba(16, 25, 63, 0.1);
+  --shadow-sheet: 0 20px 60px rgba(16, 25, 63, 0.24);
 
-  /* Radii */
+  /* Radii — continuous, generous, concentric */
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
-  --radius-xl: 22px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
 
   /* Type — SF on Apple platforms, graceful fallback elsewhere */
   --font-sans:
@@ -49,8 +93,12 @@
     "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic",
     "Noto Kufi Arabic", sans-serif;
 
-  /* Motion */
-  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Tracking (letter-spacing) — SF optical sizing approximation */
+  --track-title: -0.02em; /* large display text tightens */
+  --track-body: -0.01em;
+
+  /* Motion — spring-like, brief */
+  --ease-out: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-quick: 180ms;
-  --duration-gentle: 320ms;
+  --duration-gentle: 340ms;
 }

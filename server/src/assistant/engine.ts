@@ -1,15 +1,21 @@
 import { tracks, resources } from "../data/mock.js";
 import type { AssistantAnswer, Citation } from "../data/types.js";
+import { askGemini, isConfigured } from "./gemini.js";
 
 /**
- * Grounded Q&A stub (PRD §6.3, FR-A2/A3).
+ * Grounded Q&A for the Tamakan assistant (PRD §6.3, FR-A2/A3).
  *
- * This is a deliberately transparent keyword-retrieval stand-in for the real
- * retrieval/model backend (TBD — PRD §13.4). It ONLY answers from Tamakan
- * content: it scores tracks/modules/resources against the question, cites what
- * it used, and escalates ("ask a human") when nothing scores well — so it never
- * fabricates a procedure. Swap this module for the real RAG client later; the
- * HTTP contract (AssistantAnswer) stays the same.
+ * Hybrid design:
+ *  1. Deterministic keyword retrieval scores the approved Tamakan catalog
+ *     (tracks/modules/resources) against the question → gives us the clickable
+ *     Citations, exactly as before.
+ *  2. If a Gemini key is configured (GEMINI_API_KEY), we hand the question plus
+ *     a compact catalog to the LLM for the prose answer — it grounds in KOC
+ *     content when it can and clearly flags general domain guidance otherwise.
+ *  3. If no key is set, or the LLM call fails, we fall back to the original
+ *     keyword stub so the app never breaks.
+ *
+ * The HTTP contract (AssistantAnswer) is unchanged, so the client never moves.
  */
 
 interface Scored {
@@ -39,7 +45,8 @@ function scoreText(text: string, terms: string[]): number {
   return s;
 }
 
-export function answer(question: string): AssistantAnswer {
+/** Score the approved catalog against the question; return the top hits. */
+function retrieve(question: string): Scored[] {
   const terms = tokenize(question);
   const hits: Scored[] = [];
 
@@ -76,9 +83,31 @@ export function answer(question: string): AssistantAnswer {
   }
 
   hits.sort((a, b) => b.score - a.score);
-  const top = hits.slice(0, 3);
+  return hits;
+}
 
-  // Confidence: normalize best score against the question length, capped.
+/**
+ * Compact, cached catalog string handed to the LLM as grounding context.
+ * Built once — the mock content is static for the demo.
+ */
+let catalogCache: string | null = null;
+function catalog(): string {
+  if (catalogCache) return catalogCache;
+  const trackLines = tracks.map((t) => {
+    const mods = t.modules.map((m) => m.title).join("; ");
+    return `- TRACK "${t.title}" (${t.department}): modules — ${mods}`;
+  });
+  const resLines = resources.map(
+    (r) => `- RESOURCE "${r.title}" [${r.level}, ${r.type}]: ${r.description}`,
+  );
+  catalogCache = [...trackLines, ...resLines].join("\n");
+  return catalogCache;
+}
+
+/** Original deterministic answer — used as the no-key / error fallback. */
+function keywordAnswer(question: string): AssistantAnswer {
+  const terms = tokenize(question);
+  const top = retrieve(question).slice(0, 3);
   const best = top[0]?.score ?? 0;
   const confidence = terms.length === 0 ? 0 : Math.min(1, best / Math.max(2, terms.length));
   const escalate = confidence < 0.34 || top.length === 0;
@@ -112,4 +141,29 @@ export function answer(question: string): AssistantAnswer {
     confidence: Number(confidence.toFixed(2)),
     escalate,
   };
+}
+
+/**
+ * Answer a learner question. Async because it may call the LLM.
+ * Falls back to the keyword stub when no key is configured or the call fails.
+ */
+export async function answer(question: string): Promise<AssistantAnswer> {
+  if (!isConfigured()) return keywordAnswer(question);
+
+  try {
+    const hits = retrieve(question);
+    const citations = hits.slice(0, 3).map((h) => h.citation);
+    const reply = await askGemini(question, catalog());
+
+    return {
+      answer: reply.answer || keywordAnswer(question).answer,
+      // Only surface KOC sources when the answer is actually grounded in them.
+      citations: reply.grounded ? citations : [],
+      confidence: Number(reply.confidence.toFixed(2)),
+      escalate: reply.escalate,
+    };
+  } catch (err) {
+    console.error("[tamakan] Gemini call failed, using keyword fallback:", err);
+    return keywordAnswer(question);
+  }
 }

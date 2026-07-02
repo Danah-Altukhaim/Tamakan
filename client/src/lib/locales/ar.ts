@@ -15,6 +15,8 @@ export const ar = {
       analytics: "التحليلات",
       learnerView: "متعلّم",
       managerView: "مدير",
+      collapseSidebar: "طيّ الشريط الجانبي",
+      expandSidebar: "توسيع الشريط الجانبي",
     },
     common: {
       back: "رجوع",
@@ -101,6 +103,7 @@ export const ar = {
       subtitle: "أسئلة وأجوبة تقنية مستندة إلى محتوى تمكّن المعتمد",
       placeholder: "اسأل عن سير عمل أو أداة أو إجراء…",
       send: "إرسال",
+      newChat: "محادثة جديدة",
       intro:
         "اسألني عن سير عمل الهندسة والمكامن في KOC. أجيب فقط من محتوى تمكّن المعتمد مع ذكر المصادر.",
       sources: "المصادر",

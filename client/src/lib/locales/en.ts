@@ -1,8 +1,8 @@
 export const en = {
   translation: {
     app: {
-      name: "Tamakan",
-      tagline: "Technical Learning Dashboard",
+      name: "TAMAKAN",
+      tagline: "Your Learning Journey to Technical Excellence",
       department: "Engineering & Reservoir",
     },
     nav: {
@@ -15,6 +15,8 @@ export const en = {
       analytics: "Analytics",
       learnerView: "Learner",
       managerView: "Manager",
+      collapseSidebar: "Collapse sidebar",
+      expandSidebar: "Expand sidebar",
     },
     common: {
       back: "Back",
@@ -101,6 +103,7 @@ export const en = {
       subtitle: "Grounded technical Q&A over approved Tamakan content",
       placeholder: "Ask about a workflow, tool, or procedure…",
       send: "Send",
+      newChat: "New chat",
       intro:
         "Ask me about KOC Engineering & Reservoir workflows. I answer only from approved Tamakan content and cite my sources.",
       sources: "Sources",
@@ -154,8 +157,8 @@ export const en = {
       label: "Language",
     },
     login: {
-      welcome: "Welcome to Tamakan",
-      subtitle: "KOC Engineering & Reservoir · Technical Learning",
+      welcome: "Welcome to TAMAKAN",
+      subtitle: "Your Learning Journey to Technical Excellence",
       emailLabel: "KOC Email",
       emailPlaceholder: "name@kockw.com",
       passwordLabel: "Password",

@@ -28,18 +28,34 @@ export function MyTracks() {
         subtitle={t("tracks.subtitle", { department: t("app.department") })}
       />
       <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {assigned.map(({ track, completed, total, percent }) => {
+        {assigned.map(({ track, completed, total, percent }, i) => {
           const done = percent === 100;
+          const accents = [
+            "var(--accent-blue)",
+            "var(--accent-teal)",
+            "var(--accent-violet)",
+            "var(--accent-sky)",
+            "var(--accent-amber)",
+            "var(--accent-orange)",
+          ];
+          const c = accents[i % accents.length];
           return (
+            <div key={track.id} className="rise-in" style={{ animationDelay: `${i * 55}ms` }}>
             <Card
-              key={track.id}
               as="button"
               interactive
               onClick={() => navigate(`/tracks/${track.id}`)}
-              className="p-6"
+              className="h-full p-6"
             >
               <div className="mb-4 flex items-start justify-between">
-                <div className="grid h-12 w-12 place-items-center rounded-xl bg-[var(--fill-subtle)] text-[var(--koc-blue)]">
+                <div
+                  className="grid h-12 w-12 place-items-center rounded-xl"
+                  style={{
+                    background: `linear-gradient(135deg, color-mix(in srgb, ${c} 14%, white), color-mix(in srgb, ${c} 30%, white))`,
+                    color: c,
+                    boxShadow: `0 4px 12px color-mix(in srgb, ${c} 15%, transparent)`,
+                  }}
+                >
                   <Icon name={track.icon} size={26} />
                 </div>
                 {done ? (
@@ -52,7 +68,7 @@ export function MyTracks() {
                   <Badge tone="gray">{t("common.notStarted")}</Badge>
                 )}
               </div>
-              <h3 className="mb-1 text-base font-bold leading-snug">{trackTitle(track, lang)}</h3>
+              <h3 className="mb-1 text-[15px] font-semibold leading-snug text-[var(--text)]">{trackTitle(track, lang)}</h3>
               <p className="mb-4 text-xs text-[var(--text-muted)]">
                 {total} {t("common.modules")}
               </p>
@@ -69,6 +85,7 @@ export function MyTracks() {
                 </span>
               </div>
             </Card>
+            </div>
           );
         })}
       </div>

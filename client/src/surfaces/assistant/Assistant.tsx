@@ -1,10 +1,11 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
 import { useSession } from "../../app/session";
 import { Badge, Button, PageHeader } from "../../components/ui";
 import { Icon } from "../../components/Icon";
+import { Markdown } from "../../components/Markdown";
 import type { AssistantAnswer, Citation } from "../../data/types";
 
 interface ChatTurn {
@@ -22,6 +23,11 @@ export function Assistant() {
   const [busy, setBusy] = useState(false);
   const listRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    const el = listRef.current;
+    if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+  }, [turns, busy]);
+
   async function ask(question: string) {
     const q = question.trim();
     if (!q || busy) return;
@@ -38,10 +44,12 @@ export function Assistant() {
       ]);
     } finally {
       setBusy(false);
-      requestAnimationFrame(() =>
-        listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }),
-      );
     }
+  }
+
+  function resetChat() {
+    setTurns([]);
+    setInput("");
   }
 
   function goToCitation(c: Citation) {
@@ -56,7 +64,20 @@ export function Assistant() {
 
   return (
     <div className="mx-auto max-w-3xl">
-      <PageHeader title={t("assistant.title")} subtitle={t("assistant.subtitle")} />
+      <div className="flex items-start justify-between gap-4">
+        <PageHeader title={t("assistant.title")} subtitle={t("assistant.subtitle")} />
+        {turns.length > 0 && (
+          <Button
+            variant="ghost"
+            onClick={resetChat}
+            disabled={busy}
+            className="mt-1 shrink-0"
+            aria-label={t("assistant.newChat")}
+          >
+            <Icon name="refresh" size={16} /> {t("assistant.newChat")}
+          </Button>
+        )}
+      </div>
 
       <div className="flex flex-col rounded-2xl border border-[var(--separator)] bg-[var(--card)] shadow-[var(--shadow-card)]">
         {/* Messages */}
@@ -104,7 +125,11 @@ export function Assistant() {
                         : "bg-[var(--fill-subtle)] text-[var(--text)]",
                     ].join(" ")}
                   >
-                    <p>{turn.text}</p>
+                    {turn.role === "assistant" ? (
+                      <Markdown text={turn.text} />
+                    ) : (
+                      <p>{turn.text}</p>
+                    )}
 
                     {turn.answer && (
                       <div className="mt-3 space-y-2">

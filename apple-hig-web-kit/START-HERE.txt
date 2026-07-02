@@ -1,0 +1,17 @@
+apple-hig-web — Apple HIG design system for the web (iOS / iPadOS / macOS + Liquid Glass)
+
+WHAT'S IN HERE
+  apple-hig-web/        The skill itself (tokens.css, apple-hig.css, components.jsx,
+                        references/, examples/demo.html). Drop this folder into Claude Code.
+  apple-hig-web.skill   One-click installer for the Claude desktop app ("Save skill").
+  Apple HIG Skill - Claude Code Setup Guide.docx   One-page setup instructions.
+
+QUICK START (Claude Code)
+  mkdir -p ~/.claude/skills
+  cp -R apple-hig-web ~/.claude/skills/
+  Then ask Claude for an "Apple-style" / "iOS" / "Liquid Glass" UI, or type /apple-hig-web.
+
+SEE IT
+  Open apple-hig-web/examples/demo.html in a browser.
+
+Full details are in the setup guide (.docx) and apple-hig-web/README.md.

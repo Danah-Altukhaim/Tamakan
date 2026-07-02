@@ -124,8 +124,10 @@ export function Explore() {
                   <span className="capitalize">{r.level}</span>
                 </Badge>
               </div>
-              <h3 className="text-sm font-bold">{resourceTitle(r, lang)}</h3>
-              <p className="mb-2 mt-0.5 text-xs font-semibold text-[var(--koc-sky)]">
+              <h3 className="text-[15px] font-semibold leading-snug text-[var(--text)]">
+                {resourceTitle(r, lang)}
+              </h3>
+              <p className="mb-2 mt-1 text-xs font-medium text-[var(--text-muted)]">
                 {TYPE_LABEL[r.type]}
               </p>
               <p className="mb-5 flex-1 text-xs leading-relaxed text-[var(--text-muted)]">

@@ -72,19 +72,20 @@ export function TrackDetail() {
         <Icon name="chevron" size={16} className={isRtl ? "rotate-180" : ""} /> {t("common.back")}
       </button>
 
-      {/* Track header */}
-      <div
-        className="flex flex-wrap items-center justify-between gap-6 rounded-2xl p-6 sm:p-8 text-white"
-        style={{ background: "linear-gradient(120deg, var(--koc-navy), var(--koc-blue))" }}
-      >
-        <div>
-          <div className="mb-2 text-white"><Icon name={track.icon} size={40} /></div>
-          <h1 className="text-2xl font-bold">{trackTitle(track, lang)}</h1>
-          <p className="mt-1.5 text-sm text-[var(--text-on-brand-muted)]">
+      {/* Track header — clean card, one tint */}
+      <div className="flex flex-wrap items-center justify-between gap-6 rounded-[var(--radius-2xl)] border border-[var(--separator)] bg-[var(--card)] p-6 shadow-[var(--shadow-card)] sm:p-7">
+        <div className="min-w-0">
+          <div className="mb-3 grid h-12 w-12 place-items-center rounded-[var(--radius-lg)] bg-[var(--fill-subtle)] text-[var(--tint)]">
+            <Icon name={track.icon} size={26} />
+          </div>
+          <h1 className="text-[26px] font-bold leading-tight text-[var(--text)]">
+            {trackTitle(track, lang)}
+          </h1>
+          <p className="mt-1.5 text-[15px] text-[var(--text-secondary)]">
             {t("tracks.modulesCompleted", { done: progress.completed, total: progress.total })}
           </p>
           {track.overlapsWith && (
-            <p className="mt-3 flex items-start gap-1.5 max-w-md rounded-lg bg-white/10 px-3 py-2 text-xs text-[var(--text-on-brand-muted)]">
+            <p className="mt-3 flex max-w-md items-start gap-1.5 rounded-[var(--radius-md)] bg-[var(--warning-soft)] px-3 py-2 text-xs text-[var(--warning)]">
               <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
               {t("tracks.overlapNote", {
                 title: trackTitle(
@@ -95,8 +96,8 @@ export function TrackDetail() {
             </p>
           )}
         </div>
-        <div style={{ color: "white" }}>
-          <ProgressRing value={progress.percent} size={104} stroke={9} />
+        <div className="text-[var(--tint)]">
+          <ProgressRing value={progress.percent} size={100} stroke={9} />
         </div>
       </div>
 

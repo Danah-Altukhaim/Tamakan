@@ -12,8 +12,8 @@ export function ProgressRing({
   value,
   size = 88,
   stroke = 8,
-  color = "var(--koc-sand)",
-  trackColor = "rgba(255,255,255,0.18)",
+  color = "var(--tint)",
+  trackColor = "var(--fill-strong)",
   label,
 }: ProgressRingProps) {
   const r = (size - stroke) / 2;
@@ -47,7 +47,7 @@ export function ProgressRing({
         y="50%"
         dominantBaseline="central"
         textAnchor="middle"
-        style={{ fontSize: size * 0.24, fontWeight: 700, fill: "currentColor" }}
+        style={{ fontSize: size * 0.26, fontWeight: 600, fill: "currentColor", letterSpacing: "-0.02em" }}
       >
         {clamped}%
       </text>

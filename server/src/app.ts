@@ -73,12 +73,17 @@ app.post("/api/progress", (req, res) => {
 });
 
 // --- AI assistant --------------------------------------------------------
-app.post("/api/assistant", (req, res) => {
+app.post("/api/assistant", async (req, res) => {
   const { question } = req.body ?? {};
   if (typeof question !== "string" || question.trim().length === 0) {
     return res.status(400).json({ error: "Body must be { question: string }" });
   }
-  res.json(answer(question));
+  try {
+    res.json(await answer(question));
+  } catch (err) {
+    console.error("[tamakan] assistant error:", err);
+    res.status(500).json({ error: "Assistant is unavailable right now." });
+  }
 });
 
 export default app;

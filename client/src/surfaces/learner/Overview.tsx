@@ -1,15 +1,6 @@
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import {
-  BarChart,
-  Bar,
-  Cell,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from "recharts";
 import { useSession } from "../../app/session";
 import { ProgressRing } from "../../components/ProgressRing";
 import { Card, ProgressBar, StatTile, Sheet, Button, Badge } from "../../components/ui";
@@ -55,126 +46,139 @@ export function Overview() {
     day: dayLabel(d.dayIndex, lang),
     mins: d.minutes,
   }));
+  const maxMins = Math.max(1, ...activity.map((d) => d.minutes));
+
+  const summaryMetrics = [
+    { value: fmtNum(learner.points), label: t("overview.points") },
+    { value: `${tracksDone}/${assigned.length}`, label: t("overview.tracksDone") },
+    { value: `${modulesDone}/${modulesTotal}`, label: t("overview.modulesDone") },
+  ];
 
   return (
-    <div className="space-y-6">
-      {/* Welcome banner */}
-      <div
-        className="overflow-hidden rounded-2xl p-6 sm:p-8 text-white"
-        style={{
-          background: "linear-gradient(120deg, var(--koc-navy) 0%, var(--koc-blue) 100%)",
-        }}
-      >
-        <div className="flex flex-wrap items-center justify-between gap-6">
-          <div className="min-w-0">
-            <h1 className="text-2xl font-bold">
-              {t("overview.welcome", { name: learner.name.split(" ")[0] })}
-            </h1>
-            <p className="mt-1 text-sm text-[var(--text-on-brand-muted)]">
-              {t("overview.streak", { count: learner.streak })}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-6">
-              <div>
-                <div className="text-2xl font-extrabold" style={{ color: "var(--koc-sand)" }}>
-                  {learner.points.toLocaleString(lang === "ar" ? "ar-EG" : "en-US")}
-                </div>
-                <div className="text-xs text-[var(--text-on-brand-muted)]">
-                  {t("overview.points")}
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-extrabold">
-                  {tracksDone}/{assigned.length}
-                </div>
-                <div className="text-xs text-[var(--text-on-brand-muted)]">
-                  {t("overview.tracksDone")}
-                </div>
-              </div>
-              <div>
-                <div className="text-2xl font-extrabold">
-                  {modulesDone}/{modulesTotal}
-                </div>
-                <div className="text-xs text-[var(--text-on-brand-muted)]">
-                  {t("overview.modulesDone")}
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="text-center" style={{ color: "white" }}>
-            <ProgressRing value={overall} size={112} stroke={9} />
-            <div className="mt-2 text-xs text-[var(--text-on-brand-muted)]">
+    <div className="space-y-7">
+      {/* Greeting — calm large title, no gradient chrome */}
+      <header>
+        <h1 className="text-[28px] font-bold leading-tight text-[var(--text)]">
+          {t("overview.welcome", { name: learner.name.split(" ")[0] })}
+        </h1>
+        <p className="mt-1.5 text-[15px] text-[var(--text-secondary)]">
+          {t("overview.streak", { count: learner.streak })}
+        </p>
+      </header>
+
+      {/* Summary — living KOC-blue hero: ring + key metrics on a soft gradient */}
+      <Card className="brand-hero p-6 sm:p-7">
+        <div className="flex flex-col items-center gap-7 sm:flex-row sm:items-center sm:gap-8">
+          <div className="flex flex-col items-center gap-2 text-[var(--koc-blue)]">
+            <ProgressRing
+              value={overall}
+              size={104}
+              stroke={9}
+              color="var(--koc-blue)"
+              trackColor="rgba(10,74,159,0.14)"
+            />
+            <span className="text-[13px] font-medium text-[var(--text-secondary)]">
               {t("overview.overallProgress")}
-            </div>
+            </span>
+          </div>
+          <div className="grid flex-1 grid-cols-3 gap-0">
+            {summaryMetrics.map((m, i) => (
+              <div
+                key={i}
+                className={[
+                  "text-center sm:text-start",
+                  i > 0 ? "border-s border-[var(--separator)] ps-4 sm:ps-6" : "",
+                ].join(" ")}
+              >
+                <div className="text-[26px] font-semibold leading-none tracking-[-0.02em] text-[var(--text)]">
+                  {m.value}
+                </div>
+                <div className="mt-1.5 text-[13px] text-[var(--text-muted)]">{m.label}</div>
+              </div>
+            ))}
           </div>
         </div>
-      </div>
+      </Card>
 
-      {/* Stat tiles */}
+      {/* Stat tiles — a lively, curated accent set led by KOC blue */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <StatTile
-          icon={<Icon name="trophy" size={22} />}
-          value={rankName(rank.current, lang)}
-          label={t("overview.rank")}
-          accent="var(--koc-sand)"
-          onClick={() => setOpenStat("rank")}
-        />
-        <StatTile
-          icon={<Icon name="book" size={22} />}
-          value={inProgress.length}
-          label={t("common.inProgress")}
-          accent="var(--koc-blue)"
-          onClick={() => setOpenStat("inProgress")}
-        />
-        <StatTile
-          icon={<Icon name="flame" size={22} />}
-          value={`${learner.streak}`}
-          label={t("manager.streakLabel")}
-          accent="#e85d04"
-          onClick={() => setOpenStat("streak")}
-        />
-        <StatTile
-          icon={<Icon name="reservoir" size={22} />}
-          value={t("app.department")}
-          label={t("overview.department")}
-          accent="var(--koc-sky)"
-          onClick={() => setOpenStat("department")}
-        />
+        {[
+          {
+            tone: "amber" as const,
+            icon: "trophy",
+            value: rankName(rank.current, lang),
+            label: t("overview.rank"),
+            stat: "rank" as const,
+          },
+          {
+            tone: "blue" as const,
+            icon: "book",
+            value: inProgress.length,
+            label: t("common.inProgress"),
+            stat: "inProgress" as const,
+          },
+          {
+            tone: "orange" as const,
+            icon: "flame",
+            value: `${learner.streak}`,
+            label: t("manager.streakLabel"),
+            stat: "streak" as const,
+          },
+          {
+            tone: "teal" as const,
+            icon: "reservoir",
+            value: t("app.department"),
+            label: t("overview.department"),
+            stat: "department" as const,
+          },
+        ].map((s, i) => (
+          <div key={s.stat} className="rise-in" style={{ animationDelay: `${i * 70}ms` }}>
+            <StatTile
+              tone={s.tone}
+              icon={<Icon name={s.icon} size={20} />}
+              value={s.value}
+              label={s.label}
+              onClick={() => setOpenStat(s.stat)}
+            />
+          </div>
+        ))}
       </div>
 
       {/* Activity + continue learning */}
       <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
-        <Card className="p-6">
-          <h2 className="mb-4 text-sm font-bold">{t("overview.thisWeek")}</h2>
-          <ResponsiveContainer width="100%" height={168}>
-            <BarChart data={chartData} barSize={22}>
-              <XAxis
-                dataKey="day"
-                tick={{ fontSize: 11, fill: "var(--text-muted)" }}
-                axisLine={false}
-                tickLine={false}
-                reversed={lang === "ar"}
-              />
-              <YAxis hide />
-              <Tooltip
-                formatter={(v: number) => [`${v} ${t("common.minutes")}`, ""]}
-                contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--separator)" }}
-                cursor={{ fill: "var(--fill-subtle)" }}
-                isAnimationActive={false}
-              />
-              <Bar dataKey="mins" radius={[6, 6, 0, 0]}>
-                {chartData.map((d, i) => (
-                  <Cell key={i} fill={d.mins > 0 ? "var(--koc-blue)" : "var(--separator)"} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-          <p className="mt-2 text-center text-xs text-[var(--text-muted)]">
+        <Card className="flex flex-col p-6">
+          <h2 className="mb-5 text-[15px] font-semibold text-[var(--text)]">{t("overview.thisWeek")}</h2>
+          <div className="flex items-stretch gap-2" style={{ blockSize: 176 }}>
+            {chartData.map((d, i) => {
+              const pct = maxMins > 0 ? (d.mins / maxMins) * 100 : 0;
+              return (
+                <div key={i} className="flex flex-1 flex-col items-center gap-2">
+                  <div className="flex w-full flex-1 items-end justify-center">
+                    <div
+                      className="w-full max-w-[26px] rounded-t-[7px]"
+                      style={{
+                        blockSize: d.mins > 0 ? `${pct}%` : "3px",
+                        minBlockSize: d.mins > 0 ? 8 : 3,
+                        background: d.mins > 0 ? "var(--grad-bar)" : "var(--fill-strong)",
+                        boxShadow:
+                          d.mins > 0 ? "0 3px 9px color-mix(in srgb, var(--koc-blue) 14%, transparent)" : "none",
+                        transition: "block-size 0.6s var(--ease-out)",
+                      }}
+                      title={`${d.mins} ${t("common.minutes")}`}
+                    />
+                  </div>
+                  <span className="text-[11px] text-[var(--text-muted)]">{d.day}</span>
+                </div>
+              );
+            })}
+          </div>
+          <p className="mt-4 text-center text-xs text-[var(--text-muted)]">
             {t("overview.totalThisWeek", { count: weekTotal })}
           </p>
         </Card>
 
         <Card className="p-6">
-          <h2 className="mb-4 text-sm font-bold">{t("overview.continueLearning")}</h2>
+          <h2 className="mb-4 text-[15px] font-semibold text-[var(--text)]">{t("overview.continueLearning")}</h2>
           {inProgress.length === 0 ? (
             <p className="text-sm text-[var(--text-muted)]">{t("overview.nothingInProgress")}</p>
           ) : (
@@ -242,10 +246,10 @@ export function Overview() {
               </div>
               <div
                 className="rounded-xl p-3 text-white"
-                style={{ background: "var(--koc-sand)" }}
+                style={{ background: "var(--tint)" }}
               >
                 <div className="text-[11px] opacity-90">{t("statDetail.currentRank")}</div>
-                <div className="mt-1 text-sm font-bold">{rankName(rank.current, lang)}</div>
+                <div className="mt-1 text-sm font-semibold">{rankName(rank.current, lang)}</div>
               </div>
               <div className="rounded-xl bg-[var(--fill-subtle)] p-3">
                 <div className="text-[11px] text-[var(--text-muted)]">
@@ -259,7 +263,7 @@ export function Overview() {
 
             <div>
               <div className="mb-1.5 flex items-center justify-between text-xs font-semibold">
-                <span style={{ color: "var(--koc-sand)" }}>
+                <span style={{ color: "var(--tint)" }}>
                   {t("statDetail.pointsLabel", { points: fmtNum(learner.points) })}
                 </span>
                 {rank.next && (

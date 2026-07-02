@@ -49,7 +49,8 @@ export type IconName =
   | "check"
   | "chevron"
   | "graduation"
-  | "dashboard";
+  | "dashboard"
+  | "refresh";
 
 /** Stroke-based paths (share the svg's fill=none / stroke=currentColor). */
 const STROKE: Partial<Record<IconName, React.ReactNode>> = {
@@ -138,6 +139,12 @@ const STROKE: Partial<Record<IconName, React.ReactNode>> = {
   chevron: <path d="M14.5 6l-6 6 6 6" />,
   graduation: <path d="M12 4 2.5 8.5 12 13l9.5-4.5L12 4ZM6.5 11v4.5c0 1.4 2.5 2.5 5.5 2.5s5.5-1.1 5.5-2.5V11M21.5 8.5V14" />,
   dashboard: <path d="M3.5 3.5h7v7h-7zM13.5 3.5h7v4.5h-7zM13.5 11h7v9.5h-7zM3.5 13h7v7.5h-7z" />,
+  refresh: (
+    <>
+      <path d="M20 8a8 8 0 1 0 1 6" />
+      <path d="M20 3.5V8h-4.5" />
+    </>
+  ),
 };
 
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, "name"> {
