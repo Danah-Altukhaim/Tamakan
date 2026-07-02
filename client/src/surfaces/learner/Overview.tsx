@@ -159,6 +159,7 @@ export function Overview() {
                 formatter={(v: number) => [`${v} ${t("common.minutes")}`, ""]}
                 contentStyle={{ fontSize: 12, borderRadius: 10, border: "1px solid var(--separator)" }}
                 cursor={{ fill: "var(--fill-subtle)" }}
+                isAnimationActive={false}
               />
               <Bar dataKey="mins" radius={[6, 6, 0, 0]}>
                 {chartData.map((d, i) => (

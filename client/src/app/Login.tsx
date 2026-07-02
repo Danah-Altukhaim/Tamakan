@@ -4,14 +4,14 @@ import { useSession } from "./session";
 import { Icon } from "../components/Icon";
 import type { Role } from "../data/types";
 
-/** Full Tamakan wordmark (white) — sits on the login's dark navy backdrop. */
+/** Full Tamakan wordmark (blue) — sits on the login's white backdrop. */
 function Mark() {
   return (
     <img
-      src="/tamakan-logo-white.png"
+      src="/tamakan-logo.png"
       alt="Tamakan"
       className="object-contain"
-      style={{ blockSize: 56, inlineSize: "auto" }}
+      style={{ blockSize: 72, inlineSize: "auto" }}
     />
   );
 }
@@ -70,25 +70,22 @@ export function Login() {
   return (
     <div
       className="grid min-h-screen place-items-center px-4 py-10"
-      style={{
-        background:
-          "radial-gradient(120% 120% at 50% 0%, var(--koc-navy) 0%, #0a1436 55%, #070d24 100%)",
-      }}
+      style={{ background: "var(--card)" }}
     >
       <div className="w-full max-w-sm">
         {/* Brand header */}
         <div className="mb-7 flex flex-col items-center text-center">
           <Mark />
-          <h1 className="mt-4 text-2xl font-bold tracking-tight text-white">
+          <h1 className="mt-4 text-2xl font-bold tracking-tight text-[var(--text)]">
             {t("login.welcome")}
           </h1>
-          <p className="mt-1 text-sm text-[var(--text-on-brand-muted)]">
+          <p className="mt-1 text-sm text-[var(--text-muted)]">
             {t("login.subtitle")}
           </p>
         </div>
 
         {/* Auth card */}
-        <div className="rounded-3xl bg-[var(--card)] p-6 shadow-[var(--shadow-sheet)]">
+        <div className="rounded-3xl border border-[var(--separator)] bg-[var(--card)] p-6 shadow-[var(--shadow-sheet)]">
           <form onSubmit={onSubmit} className="space-y-4">
             <label className="block">
               <span className="mb-1.5 block text-xs font-semibold text-[var(--text-muted)]">
