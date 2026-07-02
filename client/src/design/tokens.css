@@ -1,0 +1,56 @@
+/*
+ * Tamakan design tokens — KOC theme on an Apple-HIG foundation.
+ * ⚠️ KOC brand hex values are a starting system per CLAUDE.md / PRD §9.2 —
+ * confirm against official KOC brand guidelines before final release.
+ */
+:root {
+  /* KOC brand */
+  --koc-blue: #0a4a9f;
+  --koc-navy: #0d1b4b;
+  --koc-sky: #2b6cb0;
+  --koc-sand: #c9a84c;
+
+  /* Surfaces */
+  --surface: #f5f7fa;
+  --card: #ffffff;
+  --card-translucent: rgba(255, 255, 255, 0.72);
+  --separator: rgba(13, 27, 75, 0.08);
+  --fill-subtle: rgba(10, 74, 159, 0.07);
+
+  /* Text */
+  --text: #0d1b4b;
+  --text-muted: #64748b;
+  --text-on-brand: #ffffff;
+  --text-on-brand-muted: #a8bfdf;
+
+  /* States */
+  --success: #16a34a;
+  --success-soft: #dcfce7;
+  --warning: #b07f18;
+  --warning-soft: #fdf3d7;
+  --locked: #cbd5e1;
+  --danger: #dc2626;
+  --danger-soft: #fee2e2;
+
+  /* Elevation (restrained, HIG-style) */
+  --shadow-card: 0 1px 2px rgba(13, 27, 75, 0.05), 0 4px 16px rgba(13, 27, 75, 0.06);
+  --shadow-raised: 0 4px 12px rgba(13, 27, 75, 0.1), 0 12px 32px rgba(13, 27, 75, 0.12);
+  --shadow-sheet: 0 24px 64px rgba(13, 27, 75, 0.28);
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 22px;
+
+  /* Type — SF on Apple platforms, graceful fallback elsewhere */
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display",
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans Arabic",
+    "Noto Kufi Arabic", sans-serif;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-quick: 180ms;
+  --duration-gentle: 320ms;
+}

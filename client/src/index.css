@@ -1,0 +1,79 @@
+@import "tailwindcss";
+@import "./design/tokens.css";
+
+@theme {
+  --color-koc-blue: #0a4a9f;
+  --color-koc-navy: #0d1b4b;
+  --color-koc-sky: #2b6cb0;
+  --color-koc-sand: #c9a84c;
+  --color-surface: #f5f7fa;
+  --color-ink: #0d1b4b;
+  --color-muted: #64748b;
+  --font-sans:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans Arabic", "Noto Kufi Arabic", sans-serif;
+}
+
+html {
+  font-family: var(--font-sans);
+  background: var(--surface);
+  color: var(--text);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+}
+
+/* Visible focus for keyboard users (WCAG 2.2 AA) */
+:focus-visible {
+  outline: 2px solid var(--koc-blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Subtle, purposeful motion; respect reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.glass {
+  background: var(--card-translucent);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+}
+
+.sheet-enter {
+  animation: sheet-in var(--duration-gentle) var(--ease-out);
+}
+@keyframes sheet-in {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.fade-in {
+  animation: fade-in var(--duration-gentle) var(--ease-out);
+}
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

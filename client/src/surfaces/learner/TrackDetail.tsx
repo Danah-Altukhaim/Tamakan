@@ -1,0 +1,160 @@
+import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
+import { useNavigate, useParams } from "react-router-dom";
+import { useSession } from "../../app/session";
+import { ProgressRing } from "../../components/ProgressRing";
+import { Badge, Button } from "../../components/ui";
+import { Icon, type IconName } from "../../components/Icon";
+import { deriveTrackProgress } from "../../lib/progress";
+import { trackTitle, moduleTitle } from "../../lib/format";
+import type { ModuleState, ModuleType, StoredModuleState } from "../../data/types";
+
+const TYPE_ICON: Record<ModuleType, IconName> = {
+  video: "play",
+  reading: "book",
+  interactive: "cursor",
+};
+
+const STATE_TONE: Record<ModuleState, "green" | "amber" | "gray" | "blue"> = {
+  completed: "green",
+  "in-progress": "amber",
+  available: "blue",
+  locked: "gray",
+};
+
+function stateGlyph(state: ModuleState): IconName {
+  if (state === "completed") return "check";
+  if (state === "in-progress") return "play";
+  if (state === "locked") return "lock";
+  return "dot";
+}
+
+export function TrackDetail() {
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
+  const { trackId } = useParams();
+  const navigate = useNavigate();
+  const { tracks, myProgress, setModuleState } = useSession();
+
+  const track = useMemo(() => tracks.find((tk) => tk.id === trackId), [tracks, trackId]);
+  const progress = useMemo(
+    () => (track ? deriveTrackProgress(track, myProgress) : null),
+    [track, myProgress],
+  );
+
+  if (!track || !progress) {
+    return (
+      <div className="py-16 text-center text-[var(--text-muted)]">Track not found.</div>
+    );
+  }
+
+  const isRtl = lang === "ar";
+
+  async function act(moduleId: string, current: ModuleState) {
+    // Learner action: an available module → in-progress; in-progress → completed.
+    const next: StoredModuleState = current === "in-progress" ? "completed" : "in-progress";
+    await setModuleState(moduleId, next);
+  }
+
+  const stateLabel: Record<ModuleState, string> = {
+    completed: t("common.completed"),
+    "in-progress": t("common.inProgress"),
+    available: t("common.available"),
+    locked: t("common.locked"),
+  };
+
+  return (
+    <div className="space-y-6">
+      <button
+        onClick={() => navigate("/tracks")}
+        className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--koc-blue)] hover:opacity-80"
+      >
+        <Icon name="chevron" size={16} className={isRtl ? "rotate-180" : ""} /> {t("common.back")}
+      </button>
+
+      {/* Track header */}
+      <div
+        className="flex flex-wrap items-center justify-between gap-6 rounded-2xl p-6 sm:p-8 text-white"
+        style={{ background: "linear-gradient(120deg, var(--koc-navy), var(--koc-blue))" }}
+      >
+        <div>
+          <div className="mb-2 text-white"><Icon name={track.icon} size={40} /></div>
+          <h1 className="text-2xl font-bold">{trackTitle(track, lang)}</h1>
+          <p className="mt-1.5 text-sm text-[var(--text-on-brand-muted)]">
+            {t("tracks.modulesCompleted", { done: progress.completed, total: progress.total })}
+          </p>
+          {track.overlapsWith && (
+            <p className="mt-3 flex items-start gap-1.5 max-w-md rounded-lg bg-white/10 px-3 py-2 text-xs text-[var(--text-on-brand-muted)]">
+              <Icon name="alert" size={14} className="mt-0.5 shrink-0" />
+              {t("tracks.overlapNote", {
+                title: trackTitle(
+                  tracks.find((x) => x.id === track.overlapsWith) ?? track,
+                  lang,
+                ),
+              })}
+            </p>
+          )}
+        </div>
+        <div style={{ color: "white" }}>
+          <ProgressRing value={progress.percent} size={104} stroke={9} />
+        </div>
+      </div>
+
+      {/* Module list */}
+      <ol className="space-y-3">
+        {progress.modules.map((m) => {
+          const locked = m.state === "locked";
+          return (
+            <li
+              key={m.id}
+              className="flex items-center gap-4 rounded-2xl border border-[var(--separator)] bg-[var(--card)] p-4 shadow-[var(--shadow-card)]"
+              style={{ opacity: locked ? 0.6 : 1 }}
+            >
+              <div
+                className="grid h-9 w-9 flex-shrink-0 place-items-center rounded-full text-sm font-bold"
+                style={{
+                  color:
+                    m.state === "completed"
+                      ? "var(--success)"
+                      : m.state === "in-progress"
+                        ? "var(--warning)"
+                        : m.state === "locked"
+                          ? "var(--text-muted)"
+                          : "var(--koc-blue)",
+                  border: "2px solid currentColor",
+                }}
+                aria-hidden
+              >
+                <Icon name={stateGlyph(m.state)} size={16} />
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-sm font-semibold">{moduleTitle(m, lang)}</div>
+                <div className="mt-1 flex items-center gap-3 text-xs text-[var(--text-muted)]">
+                  <span className="inline-flex items-center gap-1">
+                    <Icon name={TYPE_ICON[m.type]} size={13} /> {m.type}
+                  </span>
+                  <span className="inline-flex items-center gap-1">
+                    <Icon name="clock" size={13} /> {m.duration} {t("common.minutes")}
+                  </span>
+                </div>
+              </div>
+              <Badge tone={STATE_TONE[m.state]}>{stateLabel[m.state]}</Badge>
+              {!locked && (
+                <Button
+                  variant={m.state === "completed" ? "success" : "primary"}
+                  onClick={() => act(m.id, m.state)}
+                >
+                  {m.state === "completed"
+                    ? t("common.review")
+                    : m.state === "in-progress"
+                      ? t("common.continue")
+                      : t("common.start")}
+                </Button>
+              )}
+            </li>
+          );
+        })}
+      </ol>
+    </div>
+  );
+}
