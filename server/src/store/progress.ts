@@ -3,7 +3,7 @@ import type { ProgressRecord, StoredModuleState } from "../data/types.js";
 
 /**
  * In-memory progress store (PRD §11 "Progress"). Auditable, reliable record of
- * completion — swap for a real DB later; the API surface stays the same.
+ * completion, swap for a real DB later; the API surface stays the same.
  */
 let records: ProgressRecord[] = seedProgress();
 

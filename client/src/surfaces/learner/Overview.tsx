@@ -7,18 +7,21 @@ import { Card, ProgressBar, StatTile, Sheet, Button, Badge } from "../../compone
 import { Icon } from "../../components/Icon";
 import { deriveTrackProgress, overallPercent } from "../../lib/progress";
 import { rankProgress, rankName } from "../../lib/rank";
-import { trackTitle, dayLabel } from "../../lib/format";
+import { trackTitle, dayLabel, isBusinessDay } from "../../lib/format";
 import { useActivity } from "../../hooks/useActivity";
+import { DevelopmentPath } from "./DevelopmentPath";
 
 type StatKey = "rank" | "inProgress" | "streak" | "department";
 
 export function Overview() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language;
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { learner, tracks, myProgress } = useSession();
-  const activity = useActivity(learner?.id);
+  const allActivity = useActivity(learner?.id);
+  // KOC work week is Sunday–Thursday; weekend days don't count toward streak/activity.
+  const activity = allActivity.filter((d) => isBusinessDay(d.dayIndex));
   const [openStat, setOpenStat] = useState<StatKey | null>(null);
+  const [hoverBar, setHoverBar] = useState<number | null>(null);
 
   const assigned = useMemo(
     () => tracks.filter((tk) => learner?.assignedTrackIds.includes(tk.id)),
@@ -40,10 +43,10 @@ export function Overview() {
   const weekTotal = activity.reduce((s, d) => s + d.minutes, 0);
   const activeDays = activity.filter((d) => d.minutes > 0).length;
   const rank = rankProgress(learner.points, learner.rank);
-  const fmtNum = (n: number) => n.toLocaleString(lang === "ar" ? "ar-EG" : "en-US");
+  const fmtNum = (n: number) => n.toLocaleString("en-US");
 
   const chartData = activity.map((d) => ({
-    day: dayLabel(d.dayIndex, lang),
+    day: dayLabel(d.dayIndex),
     mins: d.minutes,
   }));
   const maxMins = Math.max(1, ...activity.map((d) => d.minutes));
@@ -56,7 +59,7 @@ export function Overview() {
 
   return (
     <div className="space-y-7">
-      {/* Greeting — calm large title, no gradient chrome */}
+      {/* Greeting, calm large title, no gradient chrome */}
       <header>
         <h1 className="text-[28px] font-bold leading-tight text-[var(--text)]">
           {t("overview.welcome", { name: learner.name.split(" ")[0] })}
@@ -66,7 +69,7 @@ export function Overview() {
         </p>
       </header>
 
-      {/* Summary — living KOC-blue hero: ring + key metrics on a soft gradient */}
+      {/* Summary, living KOC-blue hero: ring + key metrics on a soft gradient */}
       <Card className="brand-hero p-6 sm:p-7">
         <div className="flex flex-col items-center gap-7 sm:flex-row sm:items-center sm:gap-8">
           <div className="flex flex-col items-center gap-2 text-[var(--koc-blue)]">
@@ -100,13 +103,13 @@ export function Overview() {
         </div>
       </Card>
 
-      {/* Stat tiles — a lively, curated accent set led by KOC blue */}
+      {/* Stat tiles, a lively, curated accent set led by KOC blue */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         {[
           {
             tone: "amber" as const,
             icon: "trophy",
-            value: rankName(rank.current, lang),
+            value: rankName(rank.current),
             label: t("overview.rank"),
             stat: "rank" as const,
           },
@@ -144,6 +147,9 @@ export function Overview() {
         ))}
       </div>
 
+      {/* AI development path, role-aware recommendations + competency snapshot */}
+      <DevelopmentPath learner={learner} />
+
       {/* Activity + continue learning */}
       <div className="grid gap-5 lg:grid-cols-[1fr_1.4fr]">
         <Card className="flex flex-col p-6">
@@ -152,8 +158,21 @@ export function Overview() {
             {chartData.map((d, i) => {
               const pct = maxMins > 0 ? (d.mins / maxMins) * 100 : 0;
               return (
-                <div key={i} className="flex flex-1 flex-col items-center gap-2">
-                  <div className="flex w-full flex-1 items-end justify-center">
+                <div
+                  key={i}
+                  className="flex flex-1 cursor-default flex-col items-center gap-2"
+                  onMouseEnter={() => setHoverBar(i)}
+                  onMouseLeave={() => setHoverBar((cur) => (cur === i ? null : cur))}
+                >
+                  <div className="relative flex w-full flex-1 items-end justify-center">
+                    {hoverBar === i && (
+                      <div
+                        className="pointer-events-none absolute bottom-full z-10 mb-1.5 whitespace-nowrap rounded-md px-2 py-1 text-[11px] font-medium text-white shadow-lg"
+                        style={{ background: "var(--koc-navy)" }}
+                      >
+                        {d.mins} {t("common.minutes")}
+                      </div>
+                    )}
                     <div
                       className="w-full max-w-[26px] rounded-t-[7px]"
                       style={{
@@ -164,7 +183,6 @@ export function Overview() {
                           d.mins > 0 ? "0 3px 9px color-mix(in srgb, var(--koc-blue) 14%, transparent)" : "none",
                         transition: "block-size 0.6s var(--ease-out)",
                       }}
-                      title={`${d.mins} ${t("common.minutes")}`}
                     />
                   </div>
                   <span className="text-[11px] text-[var(--text-muted)]">{d.day}</span>
@@ -194,7 +212,7 @@ export function Overview() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="mb-1.5 truncate text-sm font-semibold">
-                        {trackTitle(p.track, lang)}
+                        {trackTitle(p.track)}
                       </div>
                       <ProgressBar value={p.percent} />
                     </div>
@@ -241,7 +259,7 @@ export function Overview() {
                   {t("statDetail.previousRank")}
                 </div>
                 <div className="mt-1 text-sm font-semibold text-[var(--text)]">
-                  {rank.previous ? rankName(rank.previous, lang) : "—"}
+                  {rank.previous ? rankName(rank.previous) : "-"}
                 </div>
               </div>
               <div
@@ -249,14 +267,14 @@ export function Overview() {
                 style={{ background: "var(--tint)" }}
               >
                 <div className="text-[11px] opacity-90">{t("statDetail.currentRank")}</div>
-                <div className="mt-1 text-sm font-semibold">{rankName(rank.current, lang)}</div>
+                <div className="mt-1 text-sm font-semibold">{rankName(rank.current)}</div>
               </div>
               <div className="rounded-xl bg-[var(--fill-subtle)] p-3">
                 <div className="text-[11px] text-[var(--text-muted)]">
                   {t("statDetail.nextRank")}
                 </div>
                 <div className="mt-1 text-sm font-semibold text-[var(--text)]">
-                  {rank.next ? rankName(rank.next, lang) : t("statDetail.maxRank")}
+                  {rank.next ? rankName(rank.next) : t("statDetail.maxRank")}
                 </div>
               </div>
             </div>
@@ -277,7 +295,7 @@ export function Overview() {
                 {rank.next
                   ? t("statDetail.pointsToNext", {
                       points: fmtNum(rank.pointsToNext),
-                      rank: rankName(rank.next, lang),
+                      rank: rankName(rank.next),
                     })
                   : t("statDetail.atTop")}
               </p>
@@ -309,7 +327,7 @@ export function Overview() {
                       <div className="min-w-0 flex-1">
                         <div className="mb-1.5 flex items-center justify-between gap-2">
                           <span className="truncate text-sm font-semibold">
-                            {trackTitle(p.track, lang)}
+                            {trackTitle(p.track)}
                           </span>
                           <span className="flex-shrink-0 text-xs text-[var(--text-muted)]">
                             {p.completed}/{p.total} {t("common.modules")}
@@ -376,7 +394,7 @@ export function Overview() {
                       {d.minutes > 0 ? <Icon name="flame" size={16} /> : "·"}
                     </div>
                     <span className="text-[10px] text-[var(--text-muted)]">
-                      {dayLabel(d.dayIndex, lang)}
+                      {dayLabel(d.dayIndex)}
                     </span>
                   </div>
                 ))}
@@ -401,8 +419,13 @@ export function Overview() {
               >
                 <Icon name="reservoir" size={26} />
               </div>
-              <div className="text-base font-bold text-[var(--text)]">
-                {t("app.department")}
+              <div>
+                <div className="text-base font-bold text-[var(--text)]">
+                  {t("app.department")}
+                </div>
+                <div className="text-xs text-[var(--text-muted)]">
+                  {t("app.discipline")}
+                </div>
               </div>
             </div>
 

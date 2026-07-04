@@ -10,7 +10,7 @@ import { askGemini, isConfigured } from "./gemini.js";
  *     (tracks/modules/resources) against the question → gives us the clickable
  *     Citations, exactly as before.
  *  2. If a Gemini key is configured (GEMINI_API_KEY), we hand the question plus
- *     a compact catalog to the LLM for the prose answer — it grounds in KOC
+ *     a compact catalog to the LLM for the prose answer, it grounds in KOC
  *     content when it can and clearly flags general domain guidance otherwise.
  *  3. If no key is set, or the LLM call fails, we fall back to the original
  *     keyword stub so the app never breaks.
@@ -51,7 +51,7 @@ function retrieve(question: string): Scored[] {
   const hits: Scored[] = [];
 
   for (const track of tracks) {
-    const base = scoreText(`${track.title} ${track.titleAr}`, terms);
+    const base = scoreText(`${track.title}`, terms);
     if (base > 0) {
       hits.push({
         citation: { kind: "track", id: track.id, label: track.title },
@@ -60,7 +60,7 @@ function retrieve(question: string): Scored[] {
       });
     }
     for (const m of track.modules) {
-      const s = scoreText(`${m.title} ${m.titleAr}`, terms);
+      const s = scoreText(`${m.title}`, terms);
       if (s > 0) {
         hits.push({
           citation: { kind: "module", id: m.id, label: `${track.title} · ${m.title}` },
@@ -72,7 +72,7 @@ function retrieve(question: string): Scored[] {
   }
 
   for (const r of resources) {
-    const s = scoreText(`${r.title} ${r.titleAr} ${r.tags.join(" ")}`, terms);
+    const s = scoreText(`${r.title} ${r.tags.join(" ")}`, terms);
     if (s > 0) {
       hits.push({
         citation: { kind: "resource", id: r.id, label: r.title },
@@ -88,14 +88,14 @@ function retrieve(question: string): Scored[] {
 
 /**
  * Compact, cached catalog string handed to the LLM as grounding context.
- * Built once — the mock content is static for the demo.
+ * Built once, the mock content is static for the demo.
  */
 let catalogCache: string | null = null;
 function catalog(): string {
   if (catalogCache) return catalogCache;
   const trackLines = tracks.map((t) => {
     const mods = t.modules.map((m) => m.title).join("; ");
-    return `- TRACK "${t.title}" (${t.department}): modules — ${mods}`;
+    return `- TRACK "${t.title}" (${t.department}): modules, ${mods}`;
   });
   const resLines = resources.map(
     (r) => `- RESOURCE "${r.title}" [${r.level}, ${r.type}]: ${r.description}`,
@@ -104,7 +104,7 @@ function catalog(): string {
   return catalogCache;
 }
 
-/** Original deterministic answer — used as the no-key / error fallback. */
+/** Original deterministic answer, used as the no-key / error fallback. */
 function keywordAnswer(question: string): AssistantAnswer {
   const terms = tokenize(question);
   const top = retrieve(question).slice(0, 3);
@@ -117,7 +117,7 @@ function keywordAnswer(question: string): AssistantAnswer {
     text =
       "I couldn't find approved Tamakan content that covers that. I don't want to " +
       "guess at a KOC procedure, so I'd suggest asking a senior engineer or your " +
-      "team lead — you can also refine the question with a tool or workflow name.";
+      "team lead, you can also refine the question with a tool or workflow name.";
   } else {
     const refs = top.map((h) => h.blurb);
     const list =
@@ -130,7 +130,7 @@ function keywordAnswer(question: string): AssistantAnswer {
       `procedure step by step.`;
     if (escalate) {
       text +=
-        " I'm only moderately confident this fully answers your question — if it's " +
+        " I'm only moderately confident this fully answers your question, if it's " +
         "not quite right, please confirm with a senior engineer.";
     }
   }

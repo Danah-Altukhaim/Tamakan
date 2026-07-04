@@ -40,7 +40,7 @@ export function Assistant() {
     } catch {
       setTurns((prev) => [
         ...prev,
-        { role: "assistant", text: "Sorry — the assistant is unavailable right now." },
+        { role: "assistant", text: "Sorry, the assistant is unavailable right now." },
       ]);
     } finally {
       setBusy(false);
@@ -85,10 +85,10 @@ export function Assistant() {
           {turns.length === 0 ? (
             <div className="flex h-full flex-col items-center justify-center py-10 text-center">
               <div
-                className="mb-4 grid h-14 w-14 place-items-center rounded-2xl text-[var(--koc-blue)]"
+                className="mb-4 grid h-20 w-20 place-items-center rounded-2xl text-[var(--koc-blue)]"
                 style={{ background: "var(--fill-subtle)" }}
               >
-                <Icon name="assistant" size={28} />
+                <Icon name="assistant" size={44} />
               </div>
               <p className="mb-6 max-w-md text-sm text-[var(--text-muted)]">
                 {t("assistant.intro")}

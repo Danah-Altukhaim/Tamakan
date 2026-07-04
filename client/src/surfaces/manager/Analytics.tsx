@@ -8,8 +8,7 @@ import { buildRoster, trackAverage } from "../../lib/manager";
 import { trackTitle } from "../../lib/format";
 
 export function Analytics() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language;
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { users, tracks, allProgress } = useSession();
 
@@ -30,11 +29,11 @@ export function Analytics() {
       tracks
         .map((tk) => {
           const { percent, assignedCount } = trackAverage(tk, users, allProgress);
-          return { id: tk.id, name: trackTitle(tk, lang), percent, assignedCount, status: tk.status };
+          return { id: tk.id, name: trackTitle(tk), percent, assignedCount, status: tk.status };
         })
         .filter((d) => d.assignedCount > 0)
         .sort((a, b) => a.percent - b.percent),
-    [tracks, users, allProgress, lang],
+    [tracks, users, allProgress],
   );
 
   const statusBadge = (status: string) => {
@@ -129,7 +128,7 @@ export function Analytics() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="truncate text-sm font-semibold">
-                        {lang === "ar" ? r.user.nameAr : r.user.name}
+                        {r.user.name}
                       </div>
                       <div className="mt-1">
                         <ProgressBar value={r.percent} />
@@ -154,7 +153,7 @@ export function Analytics() {
                     onClick={() => navigate("/manager/gaps")}
                   >
                     <Icon name={tk.icon} size={15} className="shrink-0 text-[var(--koc-sky)]" />
-                    {trackTitle(tk, lang)}
+                    {trackTitle(tk)}
                   </button>
                   {statusBadge(tk.status)}
                 </li>

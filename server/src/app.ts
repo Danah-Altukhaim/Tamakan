@@ -51,6 +51,25 @@ app.get("/api/activity/:userId", (req, res) => {
   res.json(weeklyActivity);
 });
 
+// Manager assigns/unassigns the tracks a learner is responsible for (FR-M).
+// In-memory mutation of the seeded user; swap for a real DB later.
+app.put("/api/users/:id/assignments", (req, res) => {
+  const user = users.find((u) => u.id === req.params.id);
+  if (!user) return res.status(404).json({ error: "User not found" });
+  const { trackIds } = req.body ?? {};
+  if (!Array.isArray(trackIds) || !trackIds.every((id) => typeof id === "string")) {
+    return res.status(400).json({ error: "Body must be { trackIds: string[] }" });
+  }
+  const known = new Set(tracks.map((t) => t.id));
+  const invalid = trackIds.filter((id: string) => !known.has(id));
+  if (invalid.length > 0) {
+    return res.status(400).json({ error: `Unknown track id(s): ${invalid.join(", ")}` });
+  }
+  // De-dupe while preserving order.
+  user.assignedTrackIds = [...new Set(trackIds as string[])];
+  res.json(user);
+});
+
 // --- Progress ------------------------------------------------------------
 app.get("/api/progress", (_req, res) => {
   res.json(progress.getAll());

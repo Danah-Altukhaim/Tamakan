@@ -7,7 +7,7 @@ import { Badge, Button } from "../../components/ui";
 import { Icon, type IconName } from "../../components/Icon";
 import { deriveTrackProgress } from "../../lib/progress";
 import { trackTitle, moduleTitle } from "../../lib/format";
-import type { ModuleState, ModuleType, StoredModuleState } from "../../data/types";
+import type { ModuleState, ModuleType } from "../../data/types";
 
 const TYPE_ICON: Record<ModuleType, IconName> = {
   video: "play",
@@ -30,11 +30,10 @@ function stateGlyph(state: ModuleState): IconName {
 }
 
 export function TrackDetail() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language;
+  const { t } = useTranslation();
   const { trackId } = useParams();
   const navigate = useNavigate();
-  const { tracks, myProgress, setModuleState } = useSession();
+  const { tracks, myProgress } = useSession();
 
   const track = useMemo(() => tracks.find((tk) => tk.id === trackId), [tracks, trackId]);
   const progress = useMemo(
@@ -48,12 +47,10 @@ export function TrackDetail() {
     );
   }
 
-  const isRtl = lang === "ar";
-
-  async function act(moduleId: string, current: ModuleState) {
-    // Learner action: an available module → in-progress; in-progress → completed.
-    const next: StoredModuleState = current === "in-progress" ? "completed" : "in-progress";
-    await setModuleState(moduleId, next);
+  function open(moduleId: string) {
+    // Open the module in the player, which runs the lesson / interactive session
+    // and records completion.
+    navigate(`/tracks/${track!.id}/m/${moduleId}`);
   }
 
   const stateLabel: Record<ModuleState, string> = {
@@ -69,17 +66,17 @@ export function TrackDetail() {
         onClick={() => navigate("/tracks")}
         className="inline-flex items-center gap-1.5 text-sm font-semibold text-[var(--koc-blue)] hover:opacity-80"
       >
-        <Icon name="chevron" size={16} className={isRtl ? "rotate-180" : ""} /> {t("common.back")}
+        <Icon name="chevron" size={16} /> {t("common.back")}
       </button>
 
-      {/* Track header — clean card, one tint */}
+      {/* Track header, clean card, one tint */}
       <div className="flex flex-wrap items-center justify-between gap-6 rounded-[var(--radius-2xl)] border border-[var(--separator)] bg-[var(--card)] p-6 shadow-[var(--shadow-card)] sm:p-7">
         <div className="min-w-0">
           <div className="mb-3 grid h-12 w-12 place-items-center rounded-[var(--radius-lg)] bg-[var(--fill-subtle)] text-[var(--tint)]">
             <Icon name={track.icon} size={26} />
           </div>
           <h1 className="text-[26px] font-bold leading-tight text-[var(--text)]">
-            {trackTitle(track, lang)}
+            {trackTitle(track)}
           </h1>
           <p className="mt-1.5 text-[15px] text-[var(--text-secondary)]">
             {t("tracks.modulesCompleted", { done: progress.completed, total: progress.total })}
@@ -90,7 +87,6 @@ export function TrackDetail() {
               {t("tracks.overlapNote", {
                 title: trackTitle(
                   tracks.find((x) => x.id === track.overlapsWith) ?? track,
-                  lang,
                 ),
               })}
             </p>
@@ -129,7 +125,7 @@ export function TrackDetail() {
                 <Icon name={stateGlyph(m.state)} size={16} />
               </div>
               <div className="min-w-0 flex-1">
-                <div className="text-sm font-semibold">{moduleTitle(m, lang)}</div>
+                <div className="text-sm font-semibold">{moduleTitle(m)}</div>
                 <div className="mt-1 flex items-center gap-3 text-xs text-[var(--text-muted)]">
                   <span className="inline-flex items-center gap-1">
                     <Icon name={TYPE_ICON[m.type]} size={13} /> {m.type}
@@ -143,7 +139,7 @@ export function TrackDetail() {
               {!locked && (
                 <Button
                   variant={m.state === "completed" ? "success" : "primary"}
-                  onClick={() => act(m.id, m.state)}
+                  onClick={() => open(m.id)}
                 >
                   {m.state === "completed"
                     ? t("common.review")

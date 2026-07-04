@@ -7,11 +7,16 @@ import { Login } from "./Login";
 import { Overview } from "../surfaces/learner/Overview";
 import { MyTracks } from "../surfaces/learner/MyTracks";
 import { TrackDetail } from "../surfaces/learner/TrackDetail";
+import { ModulePlayer } from "../surfaces/learner/ModulePlayer";
 import { Explore } from "../surfaces/learner/Explore";
 import { Assistant } from "../surfaces/assistant/Assistant";
 import { Roster } from "../surfaces/manager/Roster";
 import { GapHeatmap } from "../surfaces/manager/GapHeatmap";
 import { Analytics } from "../surfaces/manager/Analytics";
+import { Executive } from "../surfaces/manager/Executive";
+import { Competency } from "../surfaces/manager/Competency";
+import { KnowledgeRisk } from "../surfaces/manager/KnowledgeRisk";
+import { Compliance } from "../surfaces/manager/Compliance";
 
 function Gate({ children }: { children: ReactNode }) {
   const { ready, error, authed } = useSession();
@@ -55,7 +60,7 @@ function Gate({ children }: { children: ReactNode }) {
 /** Role-aware landing: managers start in the team roster, learners in Overview. */
 function Home() {
   const { role } = useSession();
-  return <Navigate to={role === "manager" ? "/manager/team" : "/overview"} replace />;
+  return <Navigate to={role === "manager" ? "/manager/exec" : "/overview"} replace />;
 }
 
 export default function App() {
@@ -69,9 +74,14 @@ export default function App() {
               <Route path="/overview" element={<Overview />} />
               <Route path="/tracks" element={<MyTracks />} />
               <Route path="/tracks/:trackId" element={<TrackDetail />} />
+              <Route path="/tracks/:trackId/m/:moduleId" element={<ModulePlayer />} />
               <Route path="/explore" element={<Explore />} />
               <Route path="/assistant" element={<Assistant />} />
+              <Route path="/manager/exec" element={<Executive />} />
               <Route path="/manager/team" element={<Roster />} />
+              <Route path="/manager/competencies" element={<Competency />} />
+              <Route path="/manager/risk" element={<KnowledgeRisk />} />
+              <Route path="/manager/compliance" element={<Compliance />} />
               <Route path="/manager/gaps" element={<GapHeatmap />} />
               <Route path="/manager/analytics" element={<Analytics />} />
               <Route path="*" element={<Home />} />

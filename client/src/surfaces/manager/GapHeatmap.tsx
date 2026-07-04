@@ -9,7 +9,7 @@ import { trackTitle } from "../../lib/format";
 /** Map a completion percent (or null = unassigned) to a KOC-blue heat cell. */
 function cellStyle(pct: number | null): { background: string; color: string; label: string } {
   if (pct === null) {
-    return { background: "repeating-linear-gradient(45deg,transparent,transparent 4px,var(--separator) 4px,var(--separator) 5px)", color: "var(--locked)", label: "—" };
+    return { background: "repeating-linear-gradient(45deg,transparent,transparent 4px,var(--separator) 4px,var(--separator) 5px)", color: "var(--locked)", label: "-" };
   }
   // 0% → faint, 100% → full KOC blue.
   const alpha = 0.12 + (pct / 100) * 0.82;
@@ -18,8 +18,7 @@ function cellStyle(pct: number | null): { background: string; color: string; lab
 }
 
 export function GapHeatmap() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language;
+  const { t } = useTranslation();
   const { users, tracks, allProgress } = useSession();
 
   const { learners, cell } = useMemo(
@@ -37,13 +36,13 @@ export function GapHeatmap() {
             <thead>
               <tr>
                 <th className="sticky start-0 z-10 bg-[var(--card)] px-3 py-2 text-start text-xs font-semibold text-[var(--text-muted)]">
-                  {lang === "ar" ? "المسار" : "Track"}
+                  Track
                 </th>
                 {learners.map((u) => (
                   <th
                     key={u.id}
                     className="px-1 py-2 text-center text-[11px] font-semibold text-[var(--text-muted)]"
-                    title={lang === "ar" ? u.nameAr : u.name}
+                    title={u.name}
                   >
                     <div
                       className="mx-auto grid h-7 w-7 place-items-center rounded-full"
@@ -61,7 +60,7 @@ export function GapHeatmap() {
                   <th className="sticky start-0 z-10 whitespace-nowrap bg-[var(--card)] px-3 py-1.5 text-start text-xs font-medium text-[var(--text)]">
                     <span className="inline-flex items-center gap-1.5">
                       <Icon name={track.icon} size={14} className="shrink-0 text-[var(--koc-sky)]" />
-                      {trackTitle(track, lang)}
+                      {trackTitle(track)}
                     </span>
                   </th>
                   {learners.map((u) => {
@@ -72,7 +71,7 @@ export function GapHeatmap() {
                         <div
                           className="grid h-9 w-12 place-items-center rounded-md text-[11px] font-semibold"
                           style={{ background: s.background, color: s.color }}
-                          title={`${trackTitle(track, lang)} · ${lang === "ar" ? u.nameAr : u.name}: ${s.label}`}
+                          title={`${trackTitle(track)} · ${u.name}: ${s.label}`}
                         >
                           {pct === null ? "" : s.label}
                         </div>

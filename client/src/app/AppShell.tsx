@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useSession } from "./session";
 import { Icon } from "../components/Icon";
 
-/** Tamakan falcon + head mark — blue icon; the sidebar behind it is always white. */
+/** Tamakan falcon + head mark, blue icon; the sidebar behind it is always white. */
 function Mark() {
   return (
     <img
@@ -23,7 +23,11 @@ const LEARNER_TABS = [
   { to: "/assistant", key: "nav.assistant", icon: "assistant" },
 ];
 const MANAGER_TABS = [
+  { to: "/manager/exec", key: "nav.executive", icon: "briefcase" },
   { to: "/manager/team", key: "nav.team", icon: "grid" },
+  { to: "/manager/competencies", key: "nav.competencies", icon: "target" },
+  { to: "/manager/risk", key: "nav.risk", icon: "alert" },
+  { to: "/manager/compliance", key: "nav.compliance", icon: "shield" },
   { to: "/manager/gaps", key: "nav.gaps", icon: "layers" },
   { to: "/manager/analytics", key: "nav.analytics", icon: "chart-bar" },
   { to: "/assistant", key: "nav.assistant", icon: "assistant" },
@@ -59,7 +63,7 @@ export function AppShell() {
   function switchRole(next: "learner" | "manager") {
     if (next === role) return;
     setRole(next);
-    navigate(next === "manager" ? "/manager/team" : "/overview");
+    navigate(next === "manager" ? "/manager/exec" : "/overview");
   }
 
   function renderSidebar(isCollapsed: boolean) {
@@ -78,7 +82,7 @@ export function AppShell() {
               <div className="text-base font-bold tracking-wide text-[var(--koc-navy)]">{t("app.name")}</div>
             </div>
           )}
-          {/* Collapse toggle — desktop only */}
+          {/* Collapse toggle, desktop only */}
           <button
             onClick={() => setCollapsed((c) => !c)}
             title={t(isCollapsed ? "nav.expandSidebar" : "nav.collapseSidebar")}
@@ -96,7 +100,7 @@ export function AppShell() {
               strokeLinecap="round"
               strokeLinejoin="round"
               aria-hidden
-              className={isCollapsed ? "rotate-180 rtl:rotate-0" : "rtl:rotate-180"}
+              className={isCollapsed ? "rotate-180" : ""}
             >
               <path d="M15 6l-6 6 6 6" />
             </svg>
@@ -136,7 +140,7 @@ export function AppShell() {
 
         {/* Footer: role switch + user + sign out */}
         <div className="border-t border-[var(--separator)] px-3 py-4">
-          {/* Role switch (stands in for KOC SSO roles — PRD §13.5) */}
+          {/* Role switch (stands in for KOC SSO roles, PRD §13.5) */}
           {isCollapsed ? (
             <button
               onClick={() => switchRole(role === "learner" ? "manager" : "learner")}

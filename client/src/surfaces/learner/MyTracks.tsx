@@ -8,8 +8,7 @@ import { deriveTrackProgress } from "../../lib/progress";
 import { trackTitle } from "../../lib/format";
 
 export function MyTracks() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language;
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { learner, tracks, myProgress } = useSession();
 
@@ -68,7 +67,7 @@ export function MyTracks() {
                   <Badge tone="gray">{t("common.notStarted")}</Badge>
                 )}
               </div>
-              <h3 className="mb-1 text-[15px] font-semibold leading-snug text-[var(--text)]">{trackTitle(track, lang)}</h3>
+              <h3 className="mb-1 text-[15px] font-semibold leading-snug text-[var(--text)]">{trackTitle(track)}</h3>
               <p className="mb-4 text-xs text-[var(--text-muted)]">
                 {total} {t("common.modules")}
               </p>

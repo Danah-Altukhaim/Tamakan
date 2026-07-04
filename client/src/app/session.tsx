@@ -43,10 +43,33 @@ interface SessionValue {
   /** Progress for the active learner. */
   myProgress: ProgressRecord[];
   setModuleState: (moduleId: string, state: StoredModuleState) => Promise<void>;
+  /** Add a new learner to the roster (demo: client-side only, FR-M*). */
+  addMember: (input: NewMemberInput) => User;
+  /** Manager action: set the tracks a learner is assigned (FR-M). */
+  assignTracks: (userId: string, trackIds: string[]) => Promise<void>;
+  /** Remove a learner from the roster (demo: client-side only, FR-M*). */
+  removeMember: (userId: string) => void;
+}
+
+/** Manager-supplied fields for a new team member; the rest are defaulted. */
+export interface NewMemberInput {
+  name: string;
+  jobTitle: string;
+  department: string;
+  assignedTrackIds: string[];
 }
 
 const LEARNER_ID = "u1";
 const MANAGER_ID = "m1";
+
+/** Two-letter initials from a display name (first + last word). */
+function initialsFor(name: string): string {
+  const words = name.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "?";
+  const first = words[0][0] ?? "";
+  const last = words.length > 1 ? words[words.length - 1][0] ?? "" : "";
+  return (first + last).toUpperCase();
+}
 
 const SessionContext = createContext<SessionValue | null>(null);
 
@@ -58,7 +81,7 @@ export function SessionProvider({ children }: { children: ReactNode }) {
 
   function login(nextRole: Role) {
     // The router unmounts while logged out, so reset the URL to root before it
-    // remounts — the role-aware Home route then lands us on the right surface.
+    // remounts, the role-aware Home route then lands us on the right surface.
     window.history.replaceState(null, "", "/");
     setRole(nextRole);
     setAuthed(true);
@@ -111,6 +134,48 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     [allProgress],
   );
 
+  function addMember(input: NewMemberInput): User {
+    const user: User = {
+      id: `u-${users.length + 1}-${Date.now()}`,
+      name: input.name,
+      initials: initialsFor(input.name),
+      role: "learner",
+      jobTitle: input.jobTitle,
+      department: input.department,
+      joined: new Date().toISOString().slice(0, 10),
+      streak: 0,
+      points: 0,
+      rank: "New Hire",
+      lastActive: new Date().toISOString().slice(0, 10),
+      assignedTrackIds: input.assignedTrackIds,
+    };
+    setUsers((prev) => [...prev, user]);
+    return user;
+  }
+
+  function removeMember(userId: string) {
+    // Demo-only: drop the learner and their progress from client state. Managers
+    // and the active learner are never removable (guarded in the UI too).
+    if (userId === LEARNER_ID || userId === MANAGER_ID) return;
+    setUsers((prev) => prev.filter((u) => u.id !== userId));
+    setAllProgress((prev) => prev.filter((p) => p.userId !== userId));
+  }
+
+  async function assignTracks(userId: string, trackIds: string[]) {
+    const next = [...new Set(trackIds)];
+    // Optimistic: reflect immediately so the roster/heatmap update at once.
+    setUsers((prev) =>
+      prev.map((u) => (u.id === userId ? { ...u, assignedTrackIds: next } : u)),
+    );
+    try {
+      // Persist for seeded users; client-added members (demo-only) have no
+      // server record, so a 404 here is expected and harmless.
+      await api.setAssignments(userId, next);
+    } catch {
+      /* keep the optimistic client state for the demo */
+    }
+  }
+
   async function setModuleState(moduleId: string, state: StoredModuleState) {
     const rec = await api.setProgress(LEARNER_ID, moduleId, state);
     setAllProgress((prev) => {
@@ -137,6 +202,9 @@ export function SessionProvider({ children }: { children: ReactNode }) {
     allProgress,
     myProgress,
     setModuleState,
+    addMember,
+    assignTracks,
+    removeMember,
   };
 
   return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

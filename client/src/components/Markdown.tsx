@@ -63,7 +63,7 @@ export function Markdown({ text }: { text: string }) {
       continue;
     }
 
-    // Bullet list — consume consecutive bullet lines.
+    // Bullet list, consume consecutive bullet lines.
     if (BULLET.test(line)) {
       const items: ReactNode[] = [];
       while (i < lines.length && BULLET.test(lines[i])) {
@@ -83,7 +83,7 @@ export function Markdown({ text }: { text: string }) {
       continue;
     }
 
-    // Numbered list — consume consecutive numbered lines.
+    // Numbered list, consume consecutive numbered lines.
     if (NUMBERED.test(line)) {
       const items: ReactNode[] = [];
       while (i < lines.length && NUMBERED.test(lines[i])) {
@@ -103,7 +103,7 @@ export function Markdown({ text }: { text: string }) {
       continue;
     }
 
-    // Paragraph — join consecutive plain lines until a blank/structural line.
+    // Paragraph, join consecutive plain lines until a blank/structural line.
     const para: string[] = [];
     while (
       i < lines.length &&

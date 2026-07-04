@@ -4,7 +4,7 @@ import { useSession } from "./session";
 import { Icon } from "../components/Icon";
 import type { Role } from "../data/types";
 
-/** Full Tamakan wordmark (blue) — sits on the login's white backdrop. */
+/** Full Tamakan wordmark (blue), sits on the login's white backdrop. */
 function Mark() {
   return (
     <img
@@ -16,7 +16,7 @@ function Mark() {
   );
 }
 
-/** Demo bypass card — one per role. Role only; the user's name shows post-login. */
+/** Demo bypass card, one per role. Role only; the user's name shows post-login. */
 function DemoCard({
   role,
   onEnter,

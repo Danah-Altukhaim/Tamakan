@@ -28,8 +28,7 @@ const TYPE_LABEL: Record<ResourceType, string> = {
 };
 
 export function Explore() {
-  const { t, i18n } = useTranslation();
-  const lang = i18n.language;
+  const { t } = useTranslation();
   const { resources } = useSession();
   const [query, setQuery] = useState("");
   const [type, setType] = useState<ResourceType | "all">("all");
@@ -41,7 +40,7 @@ export function Explore() {
       if (type !== "all" && r.type !== type) return false;
       if (level !== "all" && r.level !== level) return false;
       if (!q) return true;
-      const hay = `${r.title} ${r.titleAr} ${r.description} ${r.tags.join(" ")}`.toLowerCase();
+      const hay = `${r.title} ${r.description} ${r.tags.join(" ")}`.toLowerCase();
       return hay.includes(q);
     });
   }, [resources, query, type, level]);
@@ -125,13 +124,13 @@ export function Explore() {
                 </Badge>
               </div>
               <h3 className="text-[15px] font-semibold leading-snug text-[var(--text)]">
-                {resourceTitle(r, lang)}
+                {resourceTitle(r)}
               </h3>
               <p className="mb-2 mt-1 text-xs font-medium text-[var(--text-muted)]">
                 {TYPE_LABEL[r.type]}
               </p>
               <p className="mb-5 flex-1 text-xs leading-relaxed text-[var(--text-muted)]">
-                {resourceDesc(r, lang)}
+                {resourceDesc(r)}
               </p>
               <Button
                 variant="secondary"
@@ -139,7 +138,7 @@ export function Explore() {
                 onClick={() => r.url !== "#" && window.open(r.url, "_blank")}
               >
                 {t("explore.openResource")}
-                <Icon name="chevron" size={16} className={lang === "ar" ? "" : "rotate-180"} />
+                <Icon name="chevron" size={16} className="rotate-180" />
               </Button>
             </Card>
           ))}

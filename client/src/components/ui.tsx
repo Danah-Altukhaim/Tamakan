@@ -172,21 +172,32 @@ export function ProgressBar({ value, tone = "blue" }: { value: number; tone?: To
   );
 }
 
-/** Large-title page header, HIG-style. */
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+/** Large-title page header, HIG-style. Optional trailing action (e.g. a button). */
+export function PageHeader({
+  title,
+  subtitle,
+  action,
+}: {
+  title: string;
+  subtitle?: string;
+  action?: ReactNode;
+}) {
   return (
-    <header className="mb-7">
-      <h1 className="text-[28px] font-bold leading-tight text-[var(--text)]">{title}</h1>
-      {subtitle && (
-        <p className="mt-1.5 text-[15px] text-[var(--text-secondary)]">{subtitle}</p>
-      )}
+    <header className="mb-7 flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-[28px] font-bold leading-tight text-[var(--text)]">{title}</h1>
+        {subtitle && (
+          <p className="mt-1.5 text-[15px] text-[var(--text-secondary)]">{subtitle}</p>
+        )}
+      </div>
+      {action && <div className="flex-shrink-0">{action}</div>}
     </header>
   );
 }
 
 /**
- * Metric tile. Each carries a named accent — a vivid gradient glyph chip over a
- * whisper-tinted card — so a row of tiles reads as a lively, coherent set rather
+ * Metric tile. Each carries a named accent, a vivid gradient glyph chip over a
+ * whisper-tinted card, so a row of tiles reads as a lively, coherent set rather
  * than a wall of gray. KOC blue still leads; the palette is curated, not random.
  */
 export type AccentTone = "blue" | "sky" | "teal" | "violet" | "amber" | "orange" | "rose" | "green";

@@ -12,5 +12,5 @@ try {
     ".env",
   );
 } catch {
-  // No .env file present (e.g. on Vercel or first run) — that's fine.
+  // No .env file present (e.g. on Vercel or first run), that's fine.
 }

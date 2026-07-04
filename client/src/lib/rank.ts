@@ -1,26 +1,24 @@
 /**
- * Rank ladder — maps learning points to a named rank, and computes progression
+ * Rank ladder, maps learning points to a named rank, and computes progression
  * (previous / current / next) for the Rank detail view on the Overview.
  *
  * Thresholds are a starting system; confirm against the real KOC gamification
- * model once defined (PRD §13 — gamification for enterprise context is open).
+ * model once defined (PRD §13, gamification for enterprise context is open).
  */
 
 export interface RankTier {
-  /** Canonical English name — must match User.rank values in mock data. */
+  /** Canonical English name, must match User.rank values in mock data. */
   name: string;
-  /** Arabic label for the same tier. */
-  nameAr: string;
   /** Minimum points required to hold this rank. */
   min: number;
 }
 
 /** Ordered low → high. "Manager" is not a learner rank and is intentionally omitted. */
 export const RANK_LADDER: RankTier[] = [
-  { name: "New Hire", nameAr: "موظف جديد", min: 0 },
-  { name: "Intermediate Learner", nameAr: "متعلّم متوسط", min: 1000 },
-  { name: "Advanced Learner", nameAr: "متعلّم متقدّم", min: 2000 },
-  { name: "Expert", nameAr: "خبير", min: 4000 },
+  { name: "New Hire", min: 0 },
+  { name: "Intermediate Learner", min: 1000 },
+  { name: "Advanced Learner", min: 2000 },
+  { name: "Expert", min: 4000 },
 ];
 
 export interface RankProgress {
@@ -64,7 +62,7 @@ export function rankProgress(points: number, storedRank?: string): RankProgress 
   return { previous, current, next, pointsToNext, percent };
 }
 
-/** Localized rank name for a tier. */
-export function rankName(tier: RankTier, lang: string): string {
-  return lang === "ar" ? tier.nameAr : tier.name;
+/** Display name for a tier. */
+export function rankName(tier: RankTier): string {
+  return tier.name;
 }

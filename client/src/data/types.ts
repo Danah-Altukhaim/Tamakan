@@ -1,5 +1,5 @@
 /**
- * Client domain types — mirror of server/src/data/types.ts (JSON wire contract).
+ * Client domain types, mirror of server/src/data/types.ts (JSON wire contract).
  * Content hierarchy: Department → Track → Module → content unit (PRD §7.1).
  */
 
@@ -16,7 +16,6 @@ export interface Module {
   id: string;
   trackId: string;
   title: string;
-  titleAr: string;
   duration: number;
   type: ModuleType;
   order: number;
@@ -26,7 +25,6 @@ export interface Module {
 export interface Track {
   id: string;
   title: string;
-  titleAr: string;
   department: string;
   icon: string;
   order: number;
@@ -38,7 +36,6 @@ export interface Track {
 export interface User {
   id: string;
   name: string;
-  nameAr: string;
   initials: string;
   role: Role;
   jobTitle: string;
@@ -61,12 +58,10 @@ export interface ProgressRecord {
 export interface Resource {
   id: string;
   title: string;
-  titleAr: string;
   type: ResourceType;
   level: ResourceLevel;
   tags: string[];
   description: string;
-  descriptionAr: string;
   url: string;
   relatedTrackId?: string;
 }
