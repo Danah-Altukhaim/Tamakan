@@ -1,7 +1,25 @@
 import { tracks, resources } from "../data/mock.js";
 import type { AssistantAnswer, Citation, ResourceDiscipline } from "../data/types.js";
 import { askGemini, isConfigured, buildSystem } from "./gemini.js";
+import { askGroq, isGroqConfigured } from "./groq.js";
+import type { LlmReply } from "./llm.js";
 import { DISCIPLINES, agentFor, keywordScores } from "./disciplines.js";
+
+/**
+ * Ordered LLM providers Nassour tries. The first that is configured AND
+ * succeeds wins; a throttled/failed provider falls through to the next, and
+ * only if all fail (or none is configured) do we use the keyword stub. This is
+ * what lets Nassour "always answer": Gemini's tiny free quota no longer means a
+ * deflection — Groq picks up the slack.
+ */
+const PROVIDERS: Array<{
+  name: string;
+  configured: () => boolean;
+  ask: (q: string, catalog: string, system: string) => Promise<LlmReply>;
+}> = [
+  { name: "gemini", configured: isConfigured, ask: askGemini },
+  { name: "groq", configured: isGroqConfigured, ask: askGroq },
+];
 
 /**
  * Grounded Q&A for the Tamakan assistant (PRD §6.3, FR-A2/A3).
@@ -201,30 +219,33 @@ export async function answer(question: string): Promise<AssistantAnswer> {
   const agent = desk ? agentFor(desk) : undefined;
   const specialist = agent ? { id: agent.id, name: agent.name } : null;
 
-  if (!isConfigured()) return { ...keywordAnswer(question), specialist };
+  // Prefer citations from the routed desk; if that desk has no approved content,
+  // fall back to the overall top hits so we still cite something.
+  const deskHits = desk ? hits.filter((h) => h.discipline === desk) : hits;
+  const citations = (deskHits.length ? deskHits : hits).slice(0, 3).map((h) => h.citation);
+  const system = buildSystem(agent?.focus);
+  const scopedCatalog = catalog(desk ?? undefined);
 
-  try {
-    // Prefer citations from the routed desk; if that desk has no approved
-    // content, fall back to the overall top hits so we still cite something.
-    const deskHits = desk ? hits.filter((h) => h.discipline === desk) : hits;
-    const citations = (deskHits.length ? deskHits : hits).slice(0, 3).map((h) => h.citation);
-
-    const reply = await askGemini(
-      question,
-      catalog(desk ?? undefined),
-      buildSystem(agent?.focus),
-    );
-
-    return {
-      answer: reply.answer || keywordAnswer(question).answer,
-      // Only surface KOC sources when the answer is actually grounded in them.
-      citations: reply.grounded ? citations : [],
-      confidence: Number(reply.confidence.toFixed(2)),
-      escalate: reply.escalate,
-      specialist,
-    };
-  } catch (err) {
-    console.error("[tamakan] Gemini call failed, using keyword fallback:", err);
-    return { ...keywordAnswer(question), specialist };
+  // Walk the provider chain: first configured provider that answers wins.
+  for (const provider of PROVIDERS) {
+    if (!provider.configured()) continue;
+    try {
+      const reply = await provider.ask(question, scopedCatalog, system);
+      if (!reply.answer) throw new Error(`${provider.name} returned empty answer`);
+      return {
+        answer: reply.answer,
+        // Only surface KOC sources when the answer is actually grounded in them.
+        citations: reply.grounded ? citations : [],
+        confidence: Number(reply.confidence.toFixed(2)),
+        escalate: reply.escalate,
+        specialist,
+      };
+    } catch (err) {
+      console.error(`[tamakan] ${provider.name} failed, trying next provider:`, err);
+    }
   }
+
+  // Every LLM provider is unconfigured or failed → deterministic stub.
+  console.error("[tamakan] all LLM providers unavailable, using keyword fallback");
+  return { ...keywordAnswer(question), specialist };
 }

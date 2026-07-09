@@ -12,25 +12,26 @@
  * metadata footer on the last line, which we parse out and strip.
  */
 
-const MODEL = process.env.GEMINI_MODEL || "gemini-2.5-flash";
-const ENDPOINT = (key: string) =>
-  `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${key}`;
+/**
+ * Ordered list of models to try. GEMINI_MODEL may be a comma-separated chain,
+ * e.g. "gemini-2.5-flash,gemini-2.5-flash-lite,gemini-2.0-flash". When a model
+ * is throttled (429) or briefly unavailable (503) we fall through to the next
+ * one rather than deflecting to the keyword stub. The keyword fallback only
+ * fires if EVERY model in the chain fails.
+ */
+const MODELS = (process.env.GEMINI_MODEL || "gemini-2.5-flash")
+  .split(",")
+  .map((m) => m.trim())
+  .filter(Boolean);
+
+const ENDPOINT = (model: string, key: string) =>
+  `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
 
 export function isConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
 }
 
-/** Parsed reply the engine consumes. */
-export interface GeminiReply {
-  /** Markdown answer, footer already stripped. */
-  answer: string;
-  /** true when the answer leans on the provided Tamakan catalog. */
-  grounded: boolean;
-  /** 0–1 self-assessed confidence. */
-  confidence: number;
-  /** true when the user should confirm with a senior engineer. */
-  escalate: boolean;
-}
+import { type LlmReply, parseReply } from "./llm.js";
 
 const IDENTITY =
   "You are Nassour, the AI learning assistant for Kuwait Oil Company (KOC), " +
@@ -56,15 +57,24 @@ const STYLE =
   "  • One tight sentence per item, no filler, no restating the question. Use " +
   "'### ' sub-headings only for long, multi-section answers. You may end with a " +
   "single bold takeaway line.\n\n" +
-  "GROUNDING:\n" +
-  "  • You are given a catalog of APPROVED Tamakan content. When the question " +
-  "maps to it, ground your answer in that content (grounded=true).\n" +
-  "  • For general petroleum-engineering questions NOT in the catalog, you may " +
-  "answer from established domain knowledge, but note it is general guidance, " +
-  "not an approved KOC procedure (grounded=false).\n" +
-  "  • NEVER fabricate KOC-specific procedures, field/well names, or numeric " +
-  "thresholds. If you don't know a KOC-specific detail, say so (escalate=true).\n" +
-  "  • escalate=true for safety-critical actions or whenever you are unsure.\n\n" +
+  "ALWAYS ANSWER — NEVER DEFLECT:\n" +
+  "  • Every question gets a real, substantive technical answer. NEVER reply " +
+  "with only 'open the cited items', 'work through the procedure', 'refer to the " +
+  "track', or 'ask a senior engineer' — those are deflections, not answers. " +
+  "Explain the concept, method, or procedure yourself, in full, from established " +
+  "petroleum- and reservoir-engineering knowledge.\n" +
+  "  • When the question maps to the approved catalog, ground your answer in it " +
+  "(grounded=true) AND still explain it fully. When it doesn't map, answer from " +
+  "domain knowledge (grounded=false). Either way you always explain — citations " +
+  "are a supplement to your answer, never a replacement for it.\n" +
+  "  • Do not invent KOC-specific EXACT numeric thresholds, field/well names, or " +
+  "proprietary step numbers. Explain the general method completely; if a specific " +
+  "KOC value is required, give the engineering basis for it and add one brief line " +
+  "to confirm the exact figure locally — as a supplement, never instead of the " +
+  "answer.\n" +
+  "  • Keep escalate=false by default. Set escalate=true ONLY when the question is " +
+  "safety-critical and acting on a wrong answer could cause harm — and even then, " +
+  "answer the question first, then add the caution.\n\n" +
   "METADATA FOOTER, after the answer, output NOTHING but this as the very last " +
   "line, on its own line, exactly in this form:\n" +
   "[[META grounded=<true|false> confidence=<0..1> escalate=<true|false>]]\n" +
@@ -79,19 +89,18 @@ export function buildSystem(focus?: string): string {
   return focus ? `${IDENTITY}${focus}\n\n${STYLE}` : `${IDENTITY}${STYLE}`;
 }
 
-const META_RE =
-  /\[\[META\s+grounded=(true|false)\s+confidence=([0-9]*\.?[0-9]+)\s+escalate=(true|false)\s*\]\]/i;
-
 /**
  * Ask Gemini for a grounded answer. `catalog` is the compact list of approved
- * Tamakan content; `question` is the learner's question. Throws on any network
- * or API error so the engine can fall back.
+ * Tamakan content; `question` is the learner's question. Tries each model in
+ * the MODELS chain in order; a 429/503 on one model falls through to the next.
+ * Throws only when EVERY model fails, so the engine can move to the next
+ * provider (Groq) and only then the keyword stub.
  */
 export async function askGemini(
   question: string,
   catalog: string,
   system: string = buildSystem(),
-): Promise<GeminiReply> {
+): Promise<LlmReply> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY not set");
 
@@ -111,35 +120,31 @@ export async function askGemini(
     },
   };
 
-  const res = await fetch(ENDPOINT(key), {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
+  let lastErr: unknown;
+  for (const model of MODELS) {
+    try {
+      const res = await fetch(ENDPOINT(model, key), {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
 
-  if (!res.ok) {
-    const detail = await res.text().catch(() => "");
-    throw new Error(`Gemini ${res.status}: ${detail.slice(0, 200)}`);
+      if (!res.ok) {
+        const detail = await res.text().catch(() => "");
+        throw new Error(`Gemini ${model} ${res.status}: ${detail.slice(0, 160)}`);
+      }
+
+      const data = (await res.json()) as {
+        candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
+      };
+      const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
+      if (!raw) throw new Error(`Gemini ${model} returned no content`);
+
+      return parseReply(raw);
+    } catch (err) {
+      lastErr = err;
+      // Try the next model in the chain (e.g. on 429 quota / 503 overload).
+    }
   }
-
-  const data = (await res.json()) as {
-    candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }>;
-  };
-  const raw = data.candidates?.[0]?.content?.parts?.[0]?.text;
-  if (!raw) throw new Error("Gemini returned no content");
-
-  // Pull the metadata footer, then strip it (and any trailing fences) from the
-  // visible answer. If the model omitted it, fall back to sensible defaults.
-  const meta = raw.match(META_RE);
-  const answer = raw
-    .replace(META_RE, "")
-    .replace(/```+\s*$/g, "")
-    .trim();
-
-  return {
-    answer,
-    grounded: meta ? meta[1].toLowerCase() === "true" : false,
-    confidence: meta ? Math.max(0, Math.min(1, Number(meta[2]))) : 0.8,
-    escalate: meta ? meta[3].toLowerCase() === "true" : false,
-  };
+  throw lastErr ?? new Error("Gemini: all models failed");
 }
