@@ -10,6 +10,17 @@ export type ModuleState = "completed" | "in-progress" | "available" | "locked";
 export type TrackStatus = "current" | "review-due" | "undocumented";
 export type ResourceType = "pdf" | "video-series" | "interactive" | "recorded-lecture";
 export type ResourceLevel = "beginner" | "intermediate" | "advanced" | "reference";
+export type ResourceTeam =
+  | "studies-team"
+  | "integration-excellence"
+  | "operation"
+  | "production";
+export type ResourceDiscipline =
+  | "reservoir-engineering"
+  | "petroleum-engineering"
+  | "geophysics"
+  | "petrophysics"
+  | "geology";
 export type Role = "learner" | "manager";
 
 export interface Module {
@@ -29,6 +40,8 @@ export interface Track {
   icon: string;
   order: number;
   status: TrackStatus;
+  /** Which discipline desk owns this track — drives assistant routing. */
+  discipline: ResourceDiscipline;
   overlapsWith?: string;
   modules: Module[];
 }
@@ -60,6 +73,8 @@ export interface Resource {
   title: string;
   type: ResourceType;
   level: ResourceLevel;
+  team: ResourceTeam;
+  discipline: ResourceDiscipline;
   tags: string[];
   description: string;
   url: string;
@@ -82,6 +97,8 @@ export interface AssistantAnswer {
   citations: Citation[];
   confidence: number;
   escalate: boolean;
+  /** Which discipline desk Nassour routed to; null = generalist. Optional. */
+  specialist?: { id: ResourceDiscipline; name: string } | null;
 }
 
 /** UI-only: a module with its derived, prerequisite-aware state. */

@@ -1,6 +1,7 @@
 import { tracks, resources } from "../data/mock.js";
-import type { AssistantAnswer, Citation } from "../data/types.js";
-import { askGemini, isConfigured } from "./gemini.js";
+import type { AssistantAnswer, Citation, ResourceDiscipline } from "../data/types.js";
+import { askGemini, isConfigured, buildSystem } from "./gemini.js";
+import { DISCIPLINES, agentFor, keywordScores } from "./disciplines.js";
 
 /**
  * Grounded Q&A for the Tamakan assistant (PRD §6.3, FR-A2/A3).
@@ -22,6 +23,7 @@ interface Scored {
   citation: Citation;
   score: number;
   blurb: string;
+  discipline: ResourceDiscipline;
 }
 
 const STOP = new Set([
@@ -57,6 +59,7 @@ function retrieve(question: string): Scored[] {
         citation: { kind: "track", id: track.id, label: track.title },
         score: base * 2,
         blurb: `the “${track.title}” track`,
+        discipline: track.discipline,
       });
     }
     for (const m of track.modules) {
@@ -66,6 +69,7 @@ function retrieve(question: string): Scored[] {
           citation: { kind: "module", id: m.id, label: `${track.title} · ${m.title}` },
           score: s,
           blurb: `the module “${m.title}” (in ${track.title})`,
+          discipline: track.discipline,
         });
       }
     }
@@ -78,6 +82,7 @@ function retrieve(question: string): Scored[] {
         citation: { kind: "resource", id: r.id, label: r.title },
         score: s,
         blurb: `the resource “${r.title}”`,
+        discipline: r.discipline,
       });
     }
   }
@@ -87,21 +92,63 @@ function retrieve(question: string): Scored[] {
 }
 
 /**
- * Compact, cached catalog string handed to the LLM as grounding context.
- * Built once, the mock content is static for the demo.
+ * Compact catalog string handed to the LLM as grounding context. When a
+ * `discipline` is given the catalog is scoped to that desk's tracks/resources
+ * (the router's job), so the specialist grounds only in its own material; with
+ * no scope it returns the full catalog (generalist path). Results are cached
+ * per scope since the mock content is static for the demo.
  */
-let catalogCache: string | null = null;
-function catalog(): string {
-  if (catalogCache) return catalogCache;
-  const trackLines = tracks.map((t) => {
+const catalogCache = new Map<string, string>();
+function catalog(discipline?: ResourceDiscipline): string {
+  const key = discipline ?? "__all__";
+  const cached = catalogCache.get(key);
+  if (cached) return cached;
+
+  const scopedTracks = discipline ? tracks.filter((t) => t.discipline === discipline) : tracks;
+  const scopedRes = discipline ? resources.filter((r) => r.discipline === discipline) : resources;
+
+  const trackLines = scopedTracks.map((t) => {
     const mods = t.modules.map((m) => m.title).join("; ");
     return `- TRACK "${t.title}" (${t.department}): modules, ${mods}`;
   });
-  const resLines = resources.map(
+  const resLines = scopedRes.map(
     (r) => `- RESOURCE "${r.title}" [${r.level}, ${r.type}]: ${r.description}`,
   );
-  catalogCache = [...trackLines, ...resLines].join("\n");
-  return catalogCache;
+  const built = [...trackLines, ...resLines].join("\n") || "(no approved content for this desk yet)";
+  catalogCache.set(key, built);
+  return built;
+}
+
+/**
+ * Route a question to a discipline desk. Deterministic (no extra LLM call):
+ * combines the discipline of the retrieved approved content (weighted heavily,
+ * since a catalog match is strong evidence) with keyword hits against each
+ * desk's vocabulary. Returns null when nothing points anywhere → Nassour
+ * answers as a generalist.
+ */
+function route(question: string, hits: Scored[]): ResourceDiscipline | null {
+  const scores = new Map<ResourceDiscipline, number>();
+  for (const d of DISCIPLINES) scores.set(d.id, 0);
+
+  // (1) Keyword evidence — the curated desk vocabularies are discriminative, so
+  // they carry the most weight.
+  const kw = keywordScores(tokenize(question));
+  for (const [id, s] of kw) scores.set(id, (scores.get(id) ?? 0) + s * 5);
+
+  // (2) Retrieved-content evidence — weaker, because generic title words (e.g.
+  // "analysis", "reservoir") match broadly; used mainly to break ties and to
+  // route track-name questions that carry no desk keyword.
+  for (const h of hits) scores.set(h.discipline, (scores.get(h.discipline) ?? 0) + h.score);
+
+  let best: ResourceDiscipline | null = null;
+  let bestScore = 0;
+  for (const [id, s] of scores) {
+    if (s > bestScore) {
+      bestScore = s;
+      best = id;
+    }
+  }
+  return bestScore > 0 ? best : null;
 }
 
 /** Original deterministic answer, used as the no-key / error fallback. */
@@ -148,12 +195,25 @@ function keywordAnswer(question: string): AssistantAnswer {
  * Falls back to the keyword stub when no key is configured or the call fails.
  */
 export async function answer(question: string): Promise<AssistantAnswer> {
-  if (!isConfigured()) return keywordAnswer(question);
+  const hits = retrieve(question);
+  // Nassour orchestrates: pick the discipline desk this question belongs to.
+  const desk = route(question, hits);
+  const agent = desk ? agentFor(desk) : undefined;
+  const specialist = agent ? { id: agent.id, name: agent.name } : null;
+
+  if (!isConfigured()) return { ...keywordAnswer(question), specialist };
 
   try {
-    const hits = retrieve(question);
-    const citations = hits.slice(0, 3).map((h) => h.citation);
-    const reply = await askGemini(question, catalog());
+    // Prefer citations from the routed desk; if that desk has no approved
+    // content, fall back to the overall top hits so we still cite something.
+    const deskHits = desk ? hits.filter((h) => h.discipline === desk) : hits;
+    const citations = (deskHits.length ? deskHits : hits).slice(0, 3).map((h) => h.citation);
+
+    const reply = await askGemini(
+      question,
+      catalog(desk ?? undefined),
+      buildSystem(agent?.focus),
+    );
 
     return {
       answer: reply.answer || keywordAnswer(question).answer,
@@ -161,9 +221,10 @@ export async function answer(question: string): Promise<AssistantAnswer> {
       citations: reply.grounded ? citations : [],
       confidence: Number(reply.confidence.toFixed(2)),
       escalate: reply.escalate,
+      specialist,
     };
   } catch (err) {
     console.error("[tamakan] Gemini call failed, using keyword fallback:", err);
-    return keywordAnswer(question);
+    return { ...keywordAnswer(question), specialist };
   }
 }

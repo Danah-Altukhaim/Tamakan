@@ -5,7 +5,31 @@ import type {
   ProgressRecord,
   DayActivity,
   StoredModuleState,
+  ResourceDiscipline,
 } from "./types.js";
+
+/**
+ * Track → discipline desk (drives Nassour's assistant routing).
+ * ⚠️ REVIEW: proposed mapping — confirm against KOC's discipline boundaries.
+ * Only reservoir- and petroleum-engineering are content-rich today; the other
+ * three desks answer from general domain knowledge until KOC content exists.
+ */
+const TRACK_DISCIPLINE: Record<string, ResourceDiscipline> = {
+  t1: "reservoir-engineering", // Reservoir Simulation Fundamentals
+  t2: "reservoir-engineering", // Intersect (IX) Simulation Tool
+  t3: "reservoir-engineering", // Well Test Analysis
+  t4: "petroleum-engineering", // Field Operations & Safety
+  t5: "petroleum-engineering", // SBHP Validation (production surveillance)
+  t6: "petroleum-engineering", // PGOR Validation
+  t7: "reservoir-engineering", // PTA Analysis
+  t8: "petroleum-engineering", // PIPESIM Model (nodal / production systems)
+  t9: "reservoir-engineering", // Simulation Fundamentals
+  t10: "reservoir-engineering", // STPF Fundamentals (⚠️ acronym unclear)
+  t11: "petroleum-engineering", // Stimulation Program
+  t12: "petroleum-engineering", // Completion Program
+  t13: "reservoir-engineering", // SPTR Workframe (⚠️ acronym unclear)
+  t14: "geophysics", // Pore Pressure Prediction (⚠️ straddles geophys/petrophys/geology)
+};
 
 /**
  * Mock content for Engineering & Reservoir (PRD §7.2, 14 tracks).
@@ -48,6 +72,7 @@ function linear(
     icon,
     order,
     status,
+    discipline: TRACK_DISCIPLINE[id] ?? "reservoir-engineering",
     overlapsWith,
     modules,
   };
@@ -298,6 +323,8 @@ export const resources: Resource[] = [
     title: "Reservoir Simulation Handbook",
     type: "pdf",
     level: "reference",
+    team: "studies-team",
+    discipline: "reservoir-engineering",
     tags: ["simulation", "reference"],
     description: "Comprehensive reference for simulation techniques used in operations.",
     url: "#",
@@ -308,6 +335,8 @@ export const resources: Resource[] = [
     title: "IX Quick Start Guide",
     type: "video-series",
     level: "beginner",
+    team: "integration-excellence",
+    discipline: "reservoir-engineering",
     tags: ["intersect", "getting-started"],
     description: "3-part video series to get you up and running in Intersect.",
     url: "#",
@@ -318,6 +347,8 @@ export const resources: Resource[] = [
     title: "SBHP Survey Workflow",
     type: "interactive",
     level: "intermediate",
+    team: "operation",
+    discipline: "petroleum-engineering",
     tags: ["sbhp", "workflow"],
     description: "Step-by-step guided walkthrough of the SBHP proposal system.",
     url: "#",
@@ -328,6 +359,8 @@ export const resources: Resource[] = [
     title: "Material Balance Deep Dive",
     type: "recorded-lecture",
     level: "intermediate",
+    team: "studies-team",
+    discipline: "reservoir-engineering",
     tags: ["material-balance", "lecture"],
     description: "2-hour lecture on material balance from the engineering team.",
     url: "#",
@@ -338,6 +371,8 @@ export const resources: Resource[] = [
     title: "History Matching Best Practices",
     type: "pdf",
     level: "advanced",
+    team: "integration-excellence",
+    discipline: "reservoir-engineering",
     tags: ["history-matching", "guidelines"],
     description: "Internal guidelines for history matching workflows.",
     url: "#",
@@ -348,6 +383,8 @@ export const resources: Resource[] = [
     title: "Production Forecasting Methods",
     type: "interactive",
     level: "advanced",
+    team: "production",
+    discipline: "petroleum-engineering",
     tags: ["forecasting", "decline-curve"],
     description: "Hands-on exercises for decline curve and simulation-based forecasting.",
     url: "#",
@@ -358,6 +395,8 @@ export const resources: Resource[] = [
     title: "PTA Interpretation Atlas",
     type: "pdf",
     level: "advanced",
+    team: "studies-team",
+    discipline: "petrophysics",
     tags: ["pta", "well-test", "derivatives"],
     description: "Diagnostic plots and model signatures for pressure transient analysis.",
     url: "#",
@@ -368,6 +407,8 @@ export const resources: Resource[] = [
     title: "Field Safety Induction",
     type: "video-series",
     level: "beginner",
+    team: "operation",
+    discipline: "geology",
     tags: ["safety", "field-operations"],
     description: "Mandatory safety induction for new field engineers.",
     url: "#",

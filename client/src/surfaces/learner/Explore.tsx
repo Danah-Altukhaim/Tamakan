@@ -4,7 +4,12 @@ import { useSession } from "../../app/session";
 import { Card, Badge, Button, PageHeader } from "../../components/ui";
 import { Icon, type IconName } from "../../components/Icon";
 import { resourceTitle, resourceDesc } from "../../lib/format";
-import type { ResourceLevel, ResourceType } from "../../data/types";
+import type {
+  ResourceDiscipline,
+  ResourceLevel,
+  ResourceTeam,
+  ResourceType,
+} from "../../data/types";
 
 const TYPE_META: Record<ResourceType, { icon: IconName; labelKey: string }> = {
   pdf: { icon: "document", labelKey: "PDF Guide" },
@@ -27,24 +32,58 @@ const TYPE_LABEL: Record<ResourceType, string> = {
   "recorded-lecture": "Recorded Lecture",
 };
 
+const TEAM_LABEL: Record<ResourceTeam, string> = {
+  "studies-team": "Studies Team",
+  "integration-excellence": "Integration Excellence",
+  operation: "Operation",
+  production: "Production",
+};
+
+const DISCIPLINE_LABEL: Record<ResourceDiscipline, string> = {
+  "reservoir-engineering": "Reservoir Engineering",
+  "petroleum-engineering": "Petroleum Engineering",
+  geophysics: "Geophysics",
+  petrophysics: "Petrophysics",
+  geology: "Geology",
+};
+
 export function Explore() {
   const { t } = useTranslation();
   const { resources } = useSession();
   const [query, setQuery] = useState("");
+  const [team, setTeam] = useState<ResourceTeam | "all">("all");
+  const [discipline, setDiscipline] = useState<ResourceDiscipline | "all">("all");
   const [type, setType] = useState<ResourceType | "all">("all");
   const [level, setLevel] = useState<ResourceLevel | "all">("all");
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return resources.filter((r) => {
+      if (team !== "all" && r.team !== team) return false;
+      if (discipline !== "all" && r.discipline !== discipline) return false;
       if (type !== "all" && r.type !== type) return false;
       if (level !== "all" && r.level !== level) return false;
       if (!q) return true;
       const hay = `${r.title} ${r.description} ${r.tags.join(" ")}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [resources, query, type, level]);
+  }, [resources, query, team, discipline, type, level]);
 
+  const teams: (ResourceTeam | "all")[] = [
+    "all",
+    "studies-team",
+    "integration-excellence",
+    "operation",
+    "production",
+  ];
+  const disciplines: (ResourceDiscipline | "all")[] = [
+    "all",
+    "reservoir-engineering",
+    "petroleum-engineering",
+    "geophysics",
+    "petrophysics",
+    "geology",
+  ];
   const types: (ResourceType | "all")[] = [
     "all",
     "pdf",
@@ -81,6 +120,32 @@ export function Explore() {
             aria-label={t("common.search")}
           />
         </div>
+        <select
+          value={team}
+          onChange={(e) => setTeam(e.target.value as ResourceTeam | "all")}
+          className="rounded-xl border border-[var(--separator)] bg-[var(--card)] px-3 py-2.5 text-sm outline-none focus:border-[var(--koc-blue)]"
+          aria-label={t("explore.filterTeam")}
+        >
+          {teams.map((tm) => (
+            <option key={tm} value={tm}>
+              {tm === "all" ? t("explore.filterTeam") : TEAM_LABEL[tm]}
+            </option>
+          ))}
+        </select>
+        <select
+          value={discipline}
+          onChange={(e) =>
+            setDiscipline(e.target.value as ResourceDiscipline | "all")
+          }
+          className="rounded-xl border border-[var(--separator)] bg-[var(--card)] px-3 py-2.5 text-sm outline-none focus:border-[var(--koc-blue)]"
+          aria-label={t("explore.filterDiscipline")}
+        >
+          {disciplines.map((d) => (
+            <option key={d} value={d}>
+              {d === "all" ? t("explore.filterDiscipline") : DISCIPLINE_LABEL[d]}
+            </option>
+          ))}
+        </select>
         <select
           value={type}
           onChange={(e) => setType(e.target.value as ResourceType | "all")}

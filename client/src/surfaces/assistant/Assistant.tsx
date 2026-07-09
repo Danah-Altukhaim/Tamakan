@@ -1,12 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
 import { api } from "../../lib/api";
-import { useSession } from "../../app/session";
-import { Badge, Button, PageHeader } from "../../components/ui";
+import { Button, PageHeader } from "../../components/ui";
 import { Icon } from "../../components/Icon";
 import { Markdown } from "../../components/Markdown";
-import type { AssistantAnswer, Citation } from "../../data/types";
+import type { AssistantAnswer } from "../../data/types";
 
 interface ChatTurn {
   role: "user" | "assistant";
@@ -16,8 +14,6 @@ interface ChatTurn {
 
 export function Assistant() {
   const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { tracks } = useSession();
   const [turns, setTurns] = useState<ChatTurn[]>([]);
   const [input, setInput] = useState("");
   const [busy, setBusy] = useState(false);
@@ -50,14 +46,6 @@ export function Assistant() {
   function resetChat() {
     setTurns([]);
     setInput("");
-  }
-
-  function goToCitation(c: Citation) {
-    if (c.kind === "track") navigate(`/tracks/${c.id}`);
-    else if (c.kind === "module") {
-      const trackId = tracks.find((tk) => tk.modules.some((m) => m.id === c.id))?.id;
-      if (trackId) navigate(`/tracks/${trackId}`);
-    } else navigate("/explore");
   }
 
   const examples = [t("assistant.ex1"), t("assistant.ex2"), t("assistant.ex3")];
@@ -126,38 +114,22 @@ export function Assistant() {
                     ].join(" ")}
                   >
                     {turn.role === "assistant" ? (
-                      <Markdown text={turn.text} />
+                      <>
+                        {turn.answer?.specialist && (
+                          <div className="mb-2 inline-flex items-center gap-1.5 rounded-full bg-[var(--card)] px-2.5 py-1 text-[11px] font-semibold text-[var(--koc-blue)] shadow-[var(--shadow-card)]">
+                            <span
+                              className="h-1.5 w-1.5 rounded-full bg-[var(--koc-blue)]"
+                              aria-hidden
+                            />
+                            {t("assistant.desk", { name: turn.answer.specialist.name })}
+                          </div>
+                        )}
+                        <Markdown text={turn.text} />
+                      </>
                     ) : (
                       <p>{turn.text}</p>
                     )}
 
-                    {turn.answer && (
-                      <div className="mt-3 space-y-2">
-                        {turn.answer.citations.length > 0 && (
-                          <div>
-                            <div className="mb-1.5 text-xs font-semibold text-[var(--text-muted)]">
-                              {t("assistant.sources")}
-                            </div>
-                            <div className="flex flex-wrap gap-2">
-                              {turn.answer.citations.map((c) => (
-                                <button key={`${c.kind}-${c.id}`} onClick={() => goToCitation(c)}>
-                                  <Badge tone="sky">
-                                    <Icon name="link" size={12} /> {c.label}
-                                  </Badge>
-                                </button>
-                              ))}
-                            </div>
-                          </div>
-                        )}
-                        {turn.answer.escalate && (
-                          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)]">
-                            <Badge tone="amber">
-                              <Icon name="alert" size={12} /> {t("assistant.escalate")}
-                            </Badge>
-                          </div>
-                        )}
-                      </div>
-                    )}
                   </div>
                 </div>
               ))}

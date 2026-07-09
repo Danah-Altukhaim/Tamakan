@@ -10,6 +10,17 @@ export type StoredModuleState = "completed" | "in-progress";
 export type TrackStatus = "current" | "review-due" | "undocumented";
 export type ResourceType = "pdf" | "video-series" | "interactive" | "recorded-lecture";
 export type ResourceLevel = "beginner" | "intermediate" | "advanced" | "reference";
+export type ResourceTeam =
+  | "studies-team"
+  | "integration-excellence"
+  | "operation"
+  | "production";
+export type ResourceDiscipline =
+  | "reservoir-engineering"
+  | "petroleum-engineering"
+  | "geophysics"
+  | "petrophysics"
+  | "geology";
 export type Role = "learner" | "manager";
 
 export interface Module {
@@ -29,6 +40,8 @@ export interface Track {
   icon: string;
   order: number;
   status: TrackStatus;
+  /** Which discipline desk owns this track — drives assistant routing. */
+  discipline: ResourceDiscipline;
   /** One of the two unresolved overlap pairs (PRD §7.2). */
   overlapsWith?: string;
   modules: Module[];
@@ -62,6 +75,8 @@ export interface Resource {
   title: string;
   type: ResourceType;
   level: ResourceLevel;
+  team: ResourceTeam;
+  discipline: ResourceDiscipline;
   tags: string[];
   description: string;
   url: string;
@@ -86,4 +101,10 @@ export interface AssistantAnswer {
   /** 0–1; low confidence surfaces an "ask a human" escalation. */
   confidence: number;
   escalate: boolean;
+  /**
+   * Which discipline desk Nassour routed this question to. Optional and
+   * additive — existing clients ignore it; a UI can show an "answered by the
+   * Reservoir Engineering desk" badge. null = Nassour answered as generalist.
+   */
+  specialist?: { id: ResourceDiscipline; name: string } | null;
 }

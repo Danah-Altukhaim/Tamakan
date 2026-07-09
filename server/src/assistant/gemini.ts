@@ -32,7 +32,7 @@ export interface GeminiReply {
   escalate: boolean;
 }
 
-const SYSTEM =
+const IDENTITY =
   "You are Nassour, the AI learning assistant for Kuwait Oil Company (KOC), " +
   "Engineering & Reservoir department. You help petroleum and reservoir " +
   "engineers with technical questions: reservoir simulation, well test / PTA, " +
@@ -40,7 +40,11 @@ const SYSTEM =
   "field operations and safety, and related topics.\n\n" +
   "IDENTITY: Your name is Nassour. Whenever you refer to yourself or are asked " +
   "who or what you are, always say 'I am Nassour' — never call yourself just " +
-  "'an AI assistant'. Keep this name in refusals and off-topic replies too.\n\n" +
+  "'an AI assistant'. Keep this name in refusals and off-topic replies too. You " +
+  "route questions to your internal discipline desks, but you are always one " +
+  "assistant named Nassour — never mention the desk name to the user.\n\n";
+
+const STYLE =
   "ANSWER STYLE, format every answer as clean, professional Markdown with two " +
   "parts; never a single flat block and never just one sentence:\n" +
   "  • PART 1: one lead sentence that directly answers the question.\n" +
@@ -66,6 +70,15 @@ const SYSTEM =
   "[[META grounded=<true|false> confidence=<0..1> escalate=<true|false>]]\n" +
   "Do not wrap it in code fences or add text after it.";
 
+/**
+ * Compose Nassour's full system prompt. `focus` is an optional discipline-desk
+ * specialization inserted between the identity and the answer rules; when
+ * omitted, Nassour answers as a generalist.
+ */
+export function buildSystem(focus?: string): string {
+  return focus ? `${IDENTITY}${focus}\n\n${STYLE}` : `${IDENTITY}${STYLE}`;
+}
+
 const META_RE =
   /\[\[META\s+grounded=(true|false)\s+confidence=([0-9]*\.?[0-9]+)\s+escalate=(true|false)\s*\]\]/i;
 
@@ -77,6 +90,7 @@ const META_RE =
 export async function askGemini(
   question: string,
   catalog: string,
+  system: string = buildSystem(),
 ): Promise<GeminiReply> {
   const key = process.env.GEMINI_API_KEY;
   if (!key) throw new Error("GEMINI_API_KEY not set");
@@ -86,7 +100,7 @@ export async function askGemini(
     `LEARNER QUESTION:\n${question}`;
 
   const body = {
-    systemInstruction: { parts: [{ text: SYSTEM }] },
+    systemInstruction: { parts: [{ text: system }] },
     contents: [{ role: "user", parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.4,

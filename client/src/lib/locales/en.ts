@@ -111,6 +111,8 @@ export const en = {
       noResults: "No resources match your search.",
       filterType: "Type",
       filterLevel: "Level",
+      filterTeam: "Team",
+      filterDiscipline: "Discipline",
     },
     assistant: {
       title: "Nassour",
@@ -121,9 +123,7 @@ export const en = {
       intro:
         "Hi! I'm here to help you with any questions within Tamakan or anything related to your discipline. Feel free to ask me anything.",
       sources: "Sources",
-      escalate:
-        "Low confidence, consider confirming with a senior engineer.",
-      confidence: "Confidence",
+      desk: "{{name}} desk",
       examplesTitle: "Try asking",
       ex1: "How do I validate an SBHP survey?",
       ex2: "What is nodal analysis in PIPESIM?",
